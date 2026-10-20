@@ -43,7 +43,9 @@ if (-not (Get-Module -ListAvailable -Name PSPKI)) {
 
     if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue | Where-Object { $_.Version -ge [version]'2.8.5.201' })) {
         Write-Host "NuGet provider not found or too old, installing..."
-        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+        # -Force alone does not suppress the interactive "download and
+        # install NuGet now?" prompt - that needs -ForceBootstrap.
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force -ForceBootstrap
     }
 
     Write-Host "PSPKI module not found, installing from PowerShell Gallery..."
@@ -89,7 +91,7 @@ foreach ($template in $templates) {
         continue
     }
 
-    $sourceDN = $template.Properties.DistinguishedName
+    $sourceDN = $template.DistinguishedName
     $sourceEntry = [adsi]"LDAP://$sourceDN"
     $parentDN = $sourceEntry.Parent -replace '^LDAP://', ''
     $parentEntry = [adsi]"LDAP://$parentDN"
