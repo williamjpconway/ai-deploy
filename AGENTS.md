@@ -3,7 +3,15 @@
 Read this at the start of every session. Every rule should trace back to an entry in `retro.md`.
 
 ## Project
-- Stack: <fill in once you've chosen the target app>
+- Stack (decided 2026-10-20, for the UI - spec 000): FastAPI (Python)
+  backend, Postgres (app state), Vault (secrets - certs from spec 006,
+  Key A backup), PAM auth (`python-pam` or similar, expected to work
+  unprivileged via `pam_unix`'s `unix_chkpwd` helper), htmx/Alpine.js
+  frontend. `xterm.js` is scoped to spec 008 (terminal) only, not the
+  general frontend. No Node.js - Python drives the terminal's PTY over
+  websockets directly. The rest of the product (onboarding scripts,
+  Ansible, playbooks) stays in PowerShell/bash per the existing Tools
+  rules - this stack is specifically for the web UI.
 - Run tests: `<command>`
 - Run the app: `<command>`
 - Control VM (the ai-deploy VM itself, not a target to onboard):

@@ -44,11 +44,14 @@ reflecting Ansible inventory's real state.
 -
 
 ## 8. Open questions
-- [x] What renders this UI, how is reachability checked, and whether
-      this needs a standing web server - **explicitly deferred by the
-      user (2026-10-20) until at least one VM is actually onboarded**,
-      so the UI gets designed against real data instead of guesses.
-      Revisit this spec once spec 001 or 007 reaches Accept.
+- [x] What renders this UI - resolved by spec 000's stack decision
+      (FastAPI + htmx/Alpine.js; this page is served by that same
+      foundation, not a separate web server).
+- [x] How reachability is checked, and this feature's detailed
+      behavior - **still explicitly deferred by the user (2026-10-20)
+      until at least one VM is actually onboarded**, so the page gets
+      designed against real data instead of guesses. Revisit once
+      spec 001 or 007 reaches Accept.
 
 ---
 ### Ready checklist
