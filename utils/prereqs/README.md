@@ -58,6 +58,12 @@ at-a-glance status — it doesn't replace that rule.
   default security zones instead of the intended ones, and
   `-NetworkID` with a shorter-than-/24 prefix only creates one zone,
   not all four implied by the /22 (both fixed - now loops per /24).
+- [?] `dc/Resize-SystemVolume.ps1` — deletes the Recovery partition
+  blocking C: from expanding (standard fix after growing a VM's virtual
+  disk), then resizes C: into the freed space. Destructive - deletes a
+  partition. `-WhatIf` confirmed it correctly identifies the real
+  blocking partition on `dc` (Disk 0, Partition 4, Recovery, 919 MB);
+  the real run (not a dry-run) hasn't happened yet.
 
 ## windows-target (any Windows VM, before it becomes a template)
 - [x] `windows-target/Initialize-SshOnboarding.ps1` — installs OpenSSH
