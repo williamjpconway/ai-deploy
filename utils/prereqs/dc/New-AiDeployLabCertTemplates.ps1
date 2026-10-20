@@ -35,6 +35,17 @@ param(
 $ErrorActionPreference = "Stop"
 
 if (-not (Get-Module -ListAvailable -Name PSPKI)) {
+    # Windows PowerShell 5.1 doesn't enable TLS 1.2 by default on a fresh
+    # install; PSGallery/NuGet require it, and without this the download
+    # fails with a misleading "0x80070002 file not found" error instead
+    # of a clear TLS error.
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
+
+    if (-not (Get-PackageProvider -Name NuGet -ErrorAction SilentlyContinue | Where-Object { $_.Version -ge [version]'2.8.5.201' })) {
+        Write-Host "NuGet provider not found or too old, installing..."
+        Install-PackageProvider -Name NuGet -MinimumVersion 2.8.5.201 -Force
+    }
+
     Write-Host "PSPKI module not found, installing from PowerShell Gallery..."
     Install-Module -Name PSPKI -Scope CurrentUser -Force -AllowClobber
 }
