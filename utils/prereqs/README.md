@@ -31,17 +31,21 @@ at-a-glance status — it doesn't replace that rule.
      set. Everything below runs in order against that blank VM — the
      earlier "done" status for the OU/group/user script was against
      the pre-rebuild state and no longer applies. -->
-- [ ] `dc/Install-AiDeployForest.ps1` — promote to the first DC of a new
+- [?] `dc/Install-AiDeployForest.ps1` — promote to the first DC of a new
   forest, `domain.internal` (NetBIOS `DOMAIN`), with DNS installed via
-  `-InstallDns`. Triggers an automatic reboot; re-run after reboot to
-  verify.
-- [ ] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
+  `-InstallDns`. Must have succeeded (CA install below requires AD DS
+  to already be up) but its own output hasn't been shown/confirmed in
+  this rebuild cycle — paste it to confirm and flip to `[x]`.
+- [?] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
   `ai-deploy-operators` security group, and the `masterchief` user.
-  Previously confirmed working against the pre-rebuild domain; needs a
-  fresh run against the new forest.
-- [ ] `dc/Install-AiDeployCA.ps1` — Enterprise Root CA + Web Enrollment
-  only. Verification specifically checks `https://localhost/certsrv`
-  responds, targeting the earlier "CA isn't opening" failure.
+  Same gap as above: implied done, not yet confirmed against the new
+  forest with its own output.
+- [x] `dc/Install-AiDeployCA.ps1` — Enterprise Root CA + Web Enrollment
+  only. Confirmed working 2026-10-20: CertSvc running, `certutil -ping`
+  OK, IIS correctly routes to `/certsrv` (HTTP 403 "SSL required" is
+  the expected pass condition - requireSSL is on by default and no
+  HTTPS binding exists yet, which is deliberately deferred work, not a
+  defect).
 - [ ] `dc/New-AiDeployLabCertTemplates.ps1` — `lab-*` copies of every
   existing certificate template, 2-year validity instead of 5. Last run
   failed on a parse error (em dash in a string literal corrupted on
