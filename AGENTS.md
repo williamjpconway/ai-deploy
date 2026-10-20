@@ -39,8 +39,11 @@ Read this at the start of every session. Every rule should trace back to an entr
 - PowerShell Gallery modules (e.g. PSPKI) are for filling a genuine gap
   — reach for one only when no built-in RSAT module already covers the
   task, same bar as the custom-script rule above:
-  - Certificates: no built-in cmdlet duplicates a template or edits its
-    validity period, so PSPKI is justified there.
+  - Certificate template duplication: manual, not scripted at all (see
+    `utils/prereqs/dc/duplicate-certificate-template.md`) - no built-in
+    cmdlet does this, and a scripted PSPKI/raw-ADSI attempt hit an
+    unresolved, reproducible `E_FAIL` (retro #3). The Certificate
+    Templates console's own "Duplicate Template" sidesteps it entirely.
   - AD users/groups: the built-in `ActiveDirectory` module already
     covers create/delete fully (`New-ADUser`/`Remove-ADUser`,
     `New-ADGroup`/`Remove-ADGroup`) — no Gallery module needed.
@@ -102,6 +105,26 @@ Read this at the start of every session. Every rule should trace back to an entr
   sudo) on Ubuntu, `Administrator` on Windows — both over SSH (Windows
   uses `ansible_shell_type: powershell`, not WinRM).
 - Shell on onboarded VMs: bash/sh on Ubuntu, PowerShell on Windows.
+- **Confirmed end-to-end on `dc` 2026-10-20**: `ssh -i
+  ~/.ssh/ai_deploy_targets Administrator@<target-ip>` from `ai-deploy`
+  works and gets a real PowerShell shell. Getting there from a fresh
+  Windows Server 2025 VM needed two fixes beyond what "pre-baked SSH"
+  was assumed to mean — both are now real requirements for any future
+  Windows target's base image/template, not just `dc`:
+  - OpenSSH Server's auto-created firewall rule
+    (`OpenSSH-Server-In-TCP`) defaults to the `Private` profile only.
+    A domain-joined server's connection is `DomainAuthenticated`, which
+    that rule doesn't match, so inbound port 22 is silently blocked
+    even with `sshd` correctly listening. Fix:
+    `Set-NetFirewallRule -Name 'OpenSSH-Server-In-TCP' -Profile Any`.
+  - Windows OpenSSH's default shell is `cmd.exe`, not PowerShell, until
+    set explicitly:
+    `New-ItemProperty -Path "HKLM:\SOFTWARE\OpenSSH" -Name DefaultShell
+    -Value "C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe"
+    -PropertyType String -Force`, then restart `sshd`. Without this,
+    `ansible_shell_type: powershell` is a lie — the remote shell is
+    actually cmd, and anything with a semicolon or PowerShell syntax
+    fails confusingly.
 - Rule: any destructive action on an onboarded VM always requires
   explicit confirmation regardless of mode.
 

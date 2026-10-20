@@ -1,0 +1,164 @@
+#!/usr/bin/env bash
+# Prepares an Ubuntu VM template/image for SSH onboarding by ai-deploy:
+# creates the masterchief user with passwordless sudo, installs Key B's
+# public key, hardens sshd against password auth (including the
+# cloud-init override gotcha), and ensures ufw (if active) allows SSH.
+#
+# Run this once when building an Ubuntu VM template/golden image - not
+# per-VM, and not by onboarding itself. Onboarding assumes SSH access
+# is already pre-baked in (see BRIEF.md's Shape); this script is what
+# makes that assumption true, matching the explicit non-goal that
+# onboarding never provisions or configures a target VM itself.
+#
+# Every step here mirrors a real, confirmed gap or fix from setting up
+# ai-deploy and dc on 2026-10-20, not a hypothetical:
+# - cloud-init's 50-cloud-init.conf can set PasswordAuthentication yes
+#   and silently override later config, since sshd uses the first
+#   value it reads - a dedicated 00-keys-only.conf that sorts first is
+#   needed, and 50-cloud-init.conf itself should also be flipped.
+# - Ubuntu's SSH is socket-activated - a config change needs both
+#   ssh.socket and ssh.service restarted, not just the service.
+#
+# Idempotent: each step checks current state first and skips if
+# already correct. Supports --dry-run.
+
+set -euo pipefail
+
+TARGET_USER="masterchief"
+PUBLIC_KEY=""
+DRY_RUN=0
+
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1 ;;
+    --public-key=*) PUBLIC_KEY="${arg#--public-key=}" ;;
+    --user=*) TARGET_USER="${arg#--user=}" ;;
+  esac
+done
+
+if [[ -z "$PUBLIC_KEY" ]]; then
+  echo "Usage: $0 --public-key='ssh-ed25519 AAAA... comment' [--user=masterchief] [--dry-run]" >&2
+  exit 1
+fi
+
+run() {
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would run: $*"
+  else
+    "$@"
+  fi
+}
+
+if id "$TARGET_USER" >/dev/null 2>&1; then
+  echo "User '$TARGET_USER' already exists, skipping creation"
+else
+  run useradd -m -s /bin/bash "$TARGET_USER"
+  echo "Created user '$TARGET_USER'"
+fi
+
+SUDOERS_FILE="/etc/sudoers.d/90-$TARGET_USER"
+if [[ -f "$SUDOERS_FILE" ]]; then
+  echo "Sudoers drop-in for '$TARGET_USER' already exists, skipping"
+else
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would write $SUDOERS_FILE granting passwordless sudo"
+  else
+    echo "$TARGET_USER ALL=(ALL) NOPASSWD:ALL" > "$SUDOERS_FILE"
+    chmod 440 "$SUDOERS_FILE"
+    visudo -c -f "$SUDOERS_FILE" >/dev/null
+    echo "Granted passwordless sudo to '$TARGET_USER'"
+  fi
+fi
+
+USER_HOME=$(eval echo "~$TARGET_USER")
+SSH_DIR="$USER_HOME/.ssh"
+AUTH_KEYS="$SSH_DIR/authorized_keys"
+
+if [[ -f "$AUTH_KEYS" ]] && grep -qxF "$PUBLIC_KEY" "$AUTH_KEYS" 2>/dev/null; then
+  echo "Public key already present in $AUTH_KEYS, skipping"
+else
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would add public key to $AUTH_KEYS"
+  else
+    mkdir -p "$SSH_DIR"
+    echo "$PUBLIC_KEY" >> "$AUTH_KEYS"
+    chown -R "$TARGET_USER:$TARGET_USER" "$SSH_DIR"
+    chmod 700 "$SSH_DIR"
+    chmod 600 "$AUTH_KEYS"
+    echo "Installed public key into $AUTH_KEYS"
+  fi
+fi
+
+KEYS_ONLY_CONF="/etc/ssh/sshd_config.d/00-keys-only.conf"
+CLOUD_INIT_CONF="/etc/ssh/sshd_config.d/50-cloud-init.conf"
+NEEDS_RESTART=0
+
+if [[ -f "$KEYS_ONLY_CONF" ]]; then
+  echo "$KEYS_ONLY_CONF already exists, skipping"
+else
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would write $KEYS_ONLY_CONF (PasswordAuthentication no, etc.)"
+  else
+    cat > "$KEYS_ONLY_CONF" <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+PermitRootLogin no
+EOF
+    echo "Wrote $KEYS_ONLY_CONF"
+    NEEDS_RESTART=1
+  fi
+fi
+
+if [[ -f "$CLOUD_INIT_CONF" ]] && grep -q "PasswordAuthentication yes" "$CLOUD_INIT_CONF" 2>/dev/null; then
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would flip PasswordAuthentication to no in $CLOUD_INIT_CONF"
+  else
+    sed -i 's/PasswordAuthentication yes/PasswordAuthentication no/' "$CLOUD_INIT_CONF"
+    echo "Flipped PasswordAuthentication to no in $CLOUD_INIT_CONF"
+    NEEDS_RESTART=1
+  fi
+fi
+
+if [[ "$NEEDS_RESTART" -eq 1 ]]; then
+  run sshd -t
+  run systemctl restart ssh.socket
+  run systemctl restart ssh.service
+  echo "Restarted ssh.socket and ssh.service"
+fi
+
+if command -v ufw >/dev/null 2>&1 && ufw status | grep -q "Status: active"; then
+  if ufw status | grep -qE "22/tcp|OpenSSH"; then
+    echo "ufw already allows SSH, skipping"
+  else
+    run ufw allow OpenSSH
+    echo "Added ufw rule for OpenSSH"
+  fi
+else
+  echo "ufw not active, skipping firewall check"
+fi
+
+if [[ "$DRY_RUN" -eq 1 ]]; then
+  echo "[dry-run] would verify: sshd running, PasswordAuthentication no, authorized_keys correct"
+  exit 0
+fi
+
+echo
+echo "Verifying SSH onboarding readiness..."
+systemctl is-active --quiet ssh.service || { echo "FAILED: ssh.service is not active"; exit 1; }
+echo "ssh.service: active"
+
+if sshd -T 2>/dev/null | grep -qi "^passwordauthentication no"; then
+  echo "PasswordAuthentication: no"
+else
+  echo "FAILED: PasswordAuthentication is not confirmed off via sshd -T"
+  exit 1
+fi
+
+if [[ -f "$AUTH_KEYS" ]] && grep -qxF "$PUBLIC_KEY" "$AUTH_KEYS"; then
+  echo "authorized_keys: present and contains the expected key"
+else
+  echo "FAILED: authorized_keys missing or does not contain the expected key"
+  exit 1
+fi
+
+echo "SSH onboarding readiness check PASSED"

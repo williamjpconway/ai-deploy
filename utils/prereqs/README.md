@@ -31,26 +31,47 @@ at-a-glance status — it doesn't replace that rule.
      set. Everything below runs in order against that blank VM — the
      earlier "done" status for the OU/group/user script was against
      the pre-rebuild state and no longer applies. -->
-- [?] `dc/Install-AiDeployForest.ps1` — promote to the first DC of a new
+- [x] `dc/Install-AiDeployForest.ps1` — promote to the first DC of a new
   forest, `domain.internal` (NetBIOS `DOMAIN`), with DNS installed via
-  `-InstallDns`. Must have succeeded (CA install below requires AD DS
-  to already be up) but its own output hasn't been shown/confirmed in
-  this rebuild cycle — paste it to confirm and flip to `[x]`.
-- [?] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
+  `-InstallDns`. Confirmed working — subsequent steps (AD DS-dependent
+  OU/user creation, CA install) succeeded against this forest.
+- [x] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
   `ai-deploy-operators` security group, and the `masterchief` user.
-  Same gap as above: implied done, not yet confirmed against the new
-  forest with its own output.
+  Confirmed working against the rebuilt forest.
 - [x] `dc/Install-AiDeployCA.ps1` — Enterprise Root CA + Web Enrollment
   only. Confirmed working 2026-10-20: CertSvc running, `certutil -ping`
   OK, IIS correctly routes to `/certsrv` (HTTP 403 "SSL required" is
   the expected pass condition - requireSSL is on by default and no
   HTTPS binding exists yet, which is deliberately deferred work, not a
   defect).
-- [ ] `dc/New-AiDeployLabCertTemplates.ps1` — `lab-*` copies of every
-  existing certificate template, 2-year validity instead of 5. Last run
-  failed on a parse error (em dash in a string literal corrupted on
-  transfer — retro #2, fixed) and also needs a fresh run against the
-  new CA.
-- [ ] `dc/Install-AiDeployDNS.ps1` — forwarder (`192.168.0.254`) and
+- Certificate template duplication: **not scripted** — see
+  `dc/duplicate-certificate-template.md` for the manual process.
+  Scripted raw-ADSI duplication hit a reproducible but unexplained
+  `E_FAIL` that survived extensive isolated debugging (retro #3); the
+  Certificate Templates console's own "Duplicate Template" sidesteps
+  it entirely and this is a one-time task per template needed.
+- [x] `dc/Install-AiDeployDNS.ps1` — forwarder (`192.168.0.254`) and
   reverse lookup zone (`192.168.0.0/22`) on top of the DNS role
-  `Install-AiDeployForest.ps1` already installed.
+  `Install-AiDeployForest.ps1` already installed. Confirmed working
+  2026-10-20, including idempotency on a second run. Caught two real
+  bugs along the way: the original verification matched Windows DNS's
+  default security zones instead of the intended ones, and
+  `-NetworkID` with a shorter-than-/24 prefix only creates one zone,
+  not all four implied by the /22 (both fixed - now loops per /24).
+
+## windows-target (any Windows VM, before it becomes a template)
+- [x] `windows-target/Initialize-SshOnboarding.ps1` — installs OpenSSH
+  Server, fixes the firewall rule's profile scope (Private-only by
+  default doesn't match a domain-joined server), sets PowerShell as
+  the default SSH shell, and installs the given public key into
+  `administrators_authorized_keys` with correct ACLs. Confirmed
+  working end-to-end on `dc` 2026-10-20 (applied manually there before
+  this script existed; the script codifies the same fixes). Not yet
+  tested as a single script run against a fresh VM.
+
+## ubuntu-target (any Ubuntu VM, before it becomes a template)
+- [ ] `ubuntu-target/initialize-ssh-onboarding.sh` — creates the
+  `masterchief` user with passwordless sudo, installs the given public
+  key, hardens sshd against password auth (including the cloud-init
+  override gotcha from `ai-deploy`'s setup), and ensures `ufw` (if
+  active) allows SSH. Not yet tested.
