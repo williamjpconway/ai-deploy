@@ -106,11 +106,19 @@ foreach ($template in $templates) {
             Write-Warning "Skipped read-only/unsupported attribute '$propName' on '$labName': $($_.Exception.Message)"
         }
     }
-    $newEntry.Put('displayName', $labName)
-    $newEntry.Put('msPKI-Cert-Template-OID', (New-TemplateOid))
-    $newEntry.Put('pKIExpirationPeriod', (ConvertTo-PeriodBytes $LabValidityPeriod))
-    $newEntry.Put('pKIOverlapPeriod', (ConvertTo-PeriodBytes $LabRenewalPeriod))
-    $newEntry.SetInfo()
+    try { $newEntry.Put('displayName', $labName) }
+    catch { throw "Failed to set displayName on '$labName': $($_.Exception.Message)" }
+
+    try { $newEntry.Put('msPKI-Cert-Template-OID', (New-TemplateOid)) }
+    catch { throw "Failed to set msPKI-Cert-Template-OID on '$labName': $($_.Exception.Message)" }
+
+    try { $newEntry.Put('pKIExpirationPeriod', (ConvertTo-PeriodBytes $LabValidityPeriod)) }
+    catch { throw "Failed to set pKIExpirationPeriod on '$labName': $($_.Exception.Message)" }
+
+    try { $newEntry.Put('pKIOverlapPeriod', (ConvertTo-PeriodBytes $LabRenewalPeriod)) }
+    catch { throw "Failed to set pKIOverlapPeriod on '$labName': $($_.Exception.Message)" }
+    try { $newEntry.SetInfo() }
+    catch { throw "Failed to commit new template object '$labName' (SetInfo): $($_.Exception.Message)" }
 
     Write-Host "Created '$labName' from '$($template.Name)' - validity $($LabValidityPeriod.Days) days (verify in certtmpl.msc before publishing on the CA)"
 }
