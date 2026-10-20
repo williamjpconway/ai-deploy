@@ -26,10 +26,27 @@ at-a-glance status — it doesn't replace that rule.
   needed for `~/.local/bin` to be on PATH.
 
 ## dc
-- [x] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
+<!-- Rebuilt from scratch 2026-10-20 (the CA wasn't working); dc is now
+     treated as a blank Windows Server 2025 VM with just IP/hostname
+     set. Everything below runs in order against that blank VM — the
+     earlier "done" status for the OU/group/user script was against
+     the pre-rebuild state and no longer applies. -->
+- [ ] `dc/Install-AiDeployForest.ps1` — promote to the first DC of a new
+  forest, `domain.internal` (NetBIOS `DOMAIN`), with DNS installed via
+  `-InstallDns`. Triggers an automatic reboot; re-run after reboot to
+  verify.
+- [ ] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
   `ai-deploy-operators` security group, and the `masterchief` user.
-  Confirmed working 2026-10-20.
+  Previously confirmed working against the pre-rebuild domain; needs a
+  fresh run against the new forest.
+- [ ] `dc/Install-AiDeployCA.ps1` — Enterprise Root CA + Web Enrollment
+  only. Verification specifically checks `https://localhost/certsrv`
+  responds, targeting the earlier "CA isn't opening" failure.
 - [ ] `dc/New-AiDeployLabCertTemplates.ps1` — `lab-*` copies of every
-  existing certificate template, 2-year validity instead of 5. Failed
-  2026-10-20 on a parse error (em dash in a string literal corrupted on
-  transfer — retro #2, fixed). Not yet re-run.
+  existing certificate template, 2-year validity instead of 5. Last run
+  failed on a parse error (em dash in a string literal corrupted on
+  transfer — retro #2, fixed) and also needs a fresh run against the
+  new CA.
+- [ ] `dc/Install-AiDeployDNS.ps1` — forwarder (`192.168.0.254`) and
+  reverse lookup zone (`192.168.0.0/22`) on top of the DNS role
+  `Install-AiDeployForest.ps1` already installed.
