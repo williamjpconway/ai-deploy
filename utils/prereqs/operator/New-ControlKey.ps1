@@ -7,7 +7,7 @@
     One-time bootstrap: before this runs, ai-deploy only accepts a
     password login for masterchief. This generates a dedicated keypair
     locally (never inside the Factory repo) and appends the public key
-    to ai-deploy over a password-authenticated SSH session — you'll be
+    to ai-deploy over a password-authenticated SSH session - you'll be
     prompted for the password once, interactively, by ssh itself; this
     script never sees or stores it.
 

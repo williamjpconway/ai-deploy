@@ -6,7 +6,7 @@
 .DESCRIPTION
     Must be run by an account with rights to create OUs, groups and users
     in the target domain (Domain Admin, until least-privilege delegation
-    is set up separately — see AGENTS.md). Idempotent: skips anything
+    is set up separately - see AGENTS.md). Idempotent: skips anything
     that already exists instead of failing on re-run.
 
     Supports -WhatIf: run with -WhatIf first to see what would be

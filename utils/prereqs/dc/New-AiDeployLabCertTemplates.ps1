@@ -6,9 +6,9 @@
 
 .DESCRIPTION
     Uses PSPKI to enumerate templates and (eventually) to manage Enroll
-    ACLs on the new lab templates. Duplication itself — a new AD object,
+    ACLs on the new lab templates. Duplication itself - a new AD object,
     a new template OID, and an adjusted pKIExpirationPeriod/
-    pKIOverlapPeriod — is not a single cmdlet even in PSPKI, so it's done
+    pKIOverlapPeriod - is not a single cmdlet even in PSPKI, so it's done
     directly via ADSI here. This is the one fragile part of this script:
     OID generation is a reasonable approximation, not a collision
     guarantee. Verify each lab-* template in the Certificate Templates
@@ -19,7 +19,7 @@
 
     Supports -WhatIf: direct ADSI calls don't honor -WhatIf on their
     own, so template creation is explicitly gated on
-    $PSCmdlet.ShouldProcess — run with -WhatIf first to see which
+    $PSCmdlet.ShouldProcess - run with -WhatIf first to see which
     lab-* templates would be created, per AGENTS.md's write/test/approve
     rule for scripts.
 #>
@@ -99,5 +99,5 @@ foreach ($template in $templates) {
     $newEntry.Put('pKIOverlapPeriod', (ConvertTo-PeriodBytes $LabRenewalPeriod))
     $newEntry.SetInfo()
 
-    Write-Host "Created '$labName' from '$($template.Name)' — validity $($LabValidityPeriod.Days) days (verify in certtmpl.msc before publishing on the CA)"
+    Write-Host "Created '$labName' from '$($template.Name)' - validity $($LabValidityPeriod.Days) days (verify in certtmpl.msc before publishing on the CA)"
 }

@@ -19,6 +19,12 @@ Read this at the start of every session. Every rule should trace back to an entr
   `PSScriptAnalyzer`); shell scripts are `kebab-case.sh` (e.g.
   `new-target-key.sh`, matching Unix convention). Don't force one style
   across both languages.
+- No non-ASCII characters (em dashes, smart quotes, etc.) in script
+  files (`.ps1`/`.sh`) — use plain `-`/`"`/`'` instead. Windows
+  PowerShell 5.1 has misread UTF-8 em dashes as corrupted bytes on file
+  transfer before, breaking string literals with a confusing "missing
+  terminator" parse error (retro #2). Markdown/prose files are fine as
+  Unicode; this only applies to files that get parsed as code.
 - Prefer an established tool over a bespoke script wherever one already
   covers the need: Ansible for configuring an onboarded VM. Reach for a
   custom script only when no suitable tool exists, and say why in the

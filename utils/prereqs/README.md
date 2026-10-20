@@ -26,7 +26,10 @@ at-a-glance status — it doesn't replace that rule.
   needed for `~/.local/bin` to be on PATH.
 
 ## dc
-- [ ] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
+- [x] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the
   `ai-deploy-operators` security group, and the `masterchief` user.
+  Confirmed working 2026-10-20.
 - [ ] `dc/New-AiDeployLabCertTemplates.ps1` — `lab-*` copies of every
-  existing certificate template, 2-year validity instead of 5.
+  existing certificate template, 2-year validity instead of 5. Failed
+  2026-10-20 on a parse error (em dash in a string literal corrupted on
+  transfer — retro #2, fixed). Not yet re-run.
