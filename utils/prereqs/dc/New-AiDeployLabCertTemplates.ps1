@@ -112,13 +112,20 @@ foreach ($template in $templates) {
     try { $newEntry.Put('msPKI-Cert-Template-OID', (New-TemplateOid)) }
     catch { throw "Failed to set msPKI-Cert-Template-OID on '$labName': $($_.Exception.Message)" }
 
+    # Commit the object's basic identity before touching schema-validated
+    # attributes like the validity/renewal period - setting those before
+    # the object exists is a plausible cause of a generic E_FAIL.
+    try { $newEntry.SetInfo() }
+    catch { throw "Failed to commit new template object '$labName' (initial SetInfo): $($_.Exception.Message)" }
+
     try { $newEntry.Put('pKIExpirationPeriod', (ConvertTo-PeriodBytes $LabValidityPeriod)) }
     catch { throw "Failed to set pKIExpirationPeriod on '$labName': $($_.Exception.Message)" }
 
     try { $newEntry.Put('pKIOverlapPeriod', (ConvertTo-PeriodBytes $LabRenewalPeriod)) }
     catch { throw "Failed to set pKIOverlapPeriod on '$labName': $($_.Exception.Message)" }
+
     try { $newEntry.SetInfo() }
-    catch { throw "Failed to commit new template object '$labName' (SetInfo): $($_.Exception.Message)" }
+    catch { throw "Failed to commit validity period on '$labName' (second SetInfo): $($_.Exception.Message)" }
 
     Write-Host "Created '$labName' from '$($template.Name)' - validity $($LabValidityPeriod.Days) days (verify in certtmpl.msc before publishing on the CA)"
 }
