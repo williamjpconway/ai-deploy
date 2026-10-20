@@ -20,8 +20,10 @@ at-a-glance status — it doesn't replace that rule.
   `ai-deploy` → onboarded targets (e.g. `dc`). Confirmed working
   2026-10-20 (`~/.ssh/ai_deploy_targets`, correct permissions). Public
   key still needs adding to `dc`'s authorized keys before onboarding.
-- [ ] `ai-deploy/install-ansible.sh` — install Ansible + ansible-lint
-  (confirmed NOT pre-installed, 2026-10-20).
+- [x] `ai-deploy/install-ansible.sh` — install Ansible + ansible-lint.
+  Confirmed working 2026-10-20 via pipx: `ansible-core 2.21.5`,
+  `ansible-lint 26.10.1`. New shell session (or `source ~/.bashrc`)
+  needed for `~/.local/bin` to be on PATH.
 
 ## dc
 - [ ] `dc/New-AiDeployPrereqs.ps1` — create the `ai-deploy` OU, the

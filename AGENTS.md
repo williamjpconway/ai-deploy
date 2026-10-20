@@ -23,12 +23,10 @@ Read this at the start of every session. Every rule should trace back to an entr
   covers the need: Ansible for configuring an onboarded VM. Reach for a
   custom script only when no suitable tool exists, and say why in the
   plan when that's the case.
-- **Correction, confirmed 2026-10-20**: Ansible and ansible-lint are
-  NOT installed on `ai-deploy` — the earlier assumption that they were
-  pre-installed was wrong. Install via
-  `utils/prereqs/ai-deploy/install-ansible.sh` (see
-  `utils/prereqs/README.md` for status); don't assume either tool is
-  present without checking.
+- Ansible and ansible-lint are installed on `ai-deploy` via pipx
+  (`utils/prereqs/ai-deploy/install-ansible.sh`, confirmed working
+  2026-10-20: `ansible-core 2.21.5`, `ansible-lint 26.10.1`) — not a
+  distro package, so don't assume `apt`-based version info applies.
 - No provisioning tool (Terraform/OpenTofu) is in scope — this product
   never creates, deletes, or power-manages a VM, only connects to and
   configures ones that already exist.
