@@ -1,12 +1,10 @@
-# Roadmap: todo
-
-<!-- EXAMPLE: blank template is in templates/ROADMAP.md -->
+# Roadmap: ai-deploy
 
 | # | Feature | Status | Spec |
 |---|---------|--------|------|
-| 001 | Add an item | Specced | [specs/001-add-item](specs/001-add-item/spec.md) |
-| 002 | List items | Planned | - |
-| 003 | Complete an item | Planned | - |
-| 004 | Due dates | Planned | - |
+| 001 | Onboard an Ubuntu VM | Planned | - |
+| 002 | UI: show connected VMs | Planned | - |
+| 003 | Onboard a Windows VM | Planned | - |
+| 004 | Re-onboard / verification-failure handling | Planned | - |
 
 Status: Planned → Specced → In progress → Done
