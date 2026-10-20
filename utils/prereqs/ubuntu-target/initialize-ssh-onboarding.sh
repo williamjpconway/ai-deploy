@@ -146,7 +146,8 @@ echo "Verifying SSH onboarding readiness..."
 systemctl is-active --quiet ssh.service || { echo "FAILED: ssh.service is not active"; exit 1; }
 echo "ssh.service: active"
 
-if sshd -T 2>/dev/null | grep -qi "^passwordauthentication no"; then
+effective_config=$(sshd -T 2>/dev/null) || true
+if echo "$effective_config" | grep -qi "^passwordauthentication no"; then
   echo "PasswordAuthentication: no"
 else
   echo "FAILED: PasswordAuthentication is not confirmed off via sshd -T"
