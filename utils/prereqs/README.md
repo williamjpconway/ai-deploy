@@ -16,8 +16,10 @@ at-a-glance status — it doesn't replace that rule.
   `ai-deploy`. Confirmed working 2026-10-20.
 
 ## ai-deploy
-- [ ] `ai-deploy/new-target-key.sh` — generate Key B, for
-  `ai-deploy` → onboarded targets (e.g. `dc`).
+- [x] `ai-deploy/new-target-key.sh` — generate Key B, for
+  `ai-deploy` → onboarded targets (e.g. `dc`). Confirmed working
+  2026-10-20 (`~/.ssh/ai_deploy_targets`, correct permissions). Public
+  key still needs adding to `dc`'s authorized keys before onboarding.
 - [ ] `ai-deploy/install-ansible.sh` — install Ansible + ansible-lint
   (confirmed NOT pre-installed, 2026-10-20).
 
