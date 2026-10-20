@@ -58,26 +58,16 @@ at-a-glance status — it doesn't replace that rule.
   default security zones instead of the intended ones, and
   `-NetworkID` with a shorter-than-/24 prefix only creates one zone,
   not all four implied by the /22 (both fixed - now loops per /24).
-- [?] `dc/Resize-SystemVolume.ps1` — deletes the Recovery partition
-  blocking C: from expanding (standard fix after growing a VM's virtual
-  disk), then resizes C: into the freed space. Destructive - deletes a
-  partition. `-WhatIf` confirmed it correctly identifies the real
-  blocking partition on `dc` (Disk 0, Partition 4, Recovery, 919 MB);
-  the real run (not a dry-run) hasn't happened yet.
+- [x] `dc/Resize-SystemVolume.ps1` — deletes the Recovery partition
+  blocking C: from expanding, then resizes C: into the freed space.
+  Confirmed working 2026-10-20 (real run, not just `-WhatIf`). `dc`
+  shouldn't need this again - kept on file for any future VM that hits
+  the same recovery-partition-blocks-extend issue.
 
-## windows-target (any Windows VM, before it becomes a template)
-- [x] `windows-target/Initialize-SshOnboarding.ps1` — installs OpenSSH
-  Server, fixes the firewall rule's profile scope (Private-only by
-  default doesn't match a domain-joined server), sets PowerShell as
-  the default SSH shell, and installs the given public key into
-  `administrators_authorized_keys` with correct ACLs. Confirmed
-  working end-to-end on `dc` 2026-10-20 (applied manually there before
-  this script existed; the script codifies the same fixes). Not yet
-  tested as a single script run against a fresh VM.
-
-## ubuntu-target (any Ubuntu VM, before it becomes a template)
-- [ ] `ubuntu-target/initialize-ssh-onboarding.sh` — creates the
-  `masterchief` user with passwordless sudo, installs the given public
-  key, hardens sshd against password auth (including the cloud-init
-  override gotcha from `ai-deploy`'s setup), and ensures `ufw` (if
-  active) allows SSH. Not yet tested.
+## Onboarding prep (not a prereq - moved out)
+VM-onboarding prep scripts (what any Ubuntu 26.04 or Windows Server
+2025 VM needs before it can be onboarded) aren't tied to one of this
+project's specific machines, so they live in `utils/onboarding/`
+instead, organized by OS+version with their own READMEs - see
+`utils/onboarding/ubuntu2604/README.md` and
+`utils/onboarding/windows2025/README.md`.

@@ -10,6 +10,12 @@ Read this at the start of every session. Every rule should trace back to an entr
   hostname `ai-deploy`, IP `192.168.3.2` (eth0), Ubuntu 26.04.1 LTS, VM
   on Proxmox provisioned via cloud-init, user `masterchief`. Claude Code
   install still pending.
+- Onboarding invocation model (decided 2026-10-20, detail still
+  pending): two-phase - initiated client-side by running the SSH
+  script, completed server-side by an `onboard-windows` or
+  `onboard-ubuntu` action that runs on the target. Not yet decided:
+  exact script names/locations, how results get back into Ansible
+  inventory (which lives on `ai-deploy`, not the target).
 
 ## Tools
 - Script naming, per ecosystem convention (deliberate, not an
@@ -100,13 +106,41 @@ Read this at the start of every session. Every rule should trace back to an entr
     `ssh.service`, not just the service.
   - Open: the `ai_deploy_control` private key isn't backed up yet — the
     Proxmox console is the only other access path to `ai-deploy` if
-    it's lost.
-- SSH access to onboarded VMs: login as `masterchief` (passwordless
-  sudo) on Ubuntu, `Administrator` on Windows — both over SSH (Windows
-  uses `ansible_shell_type: powershell`, not WinRM).
+    it's lost. Plan (2026-10-20): back it up in the local Vault
+    install below, once that exists.
+- **Local Vault install (planned, not yet set up, decided 2026-10-20)**:
+  intended to store issued certificates/private keys from spec 006's
+  playbook, and a backup of Key A's private key. No further detail yet
+  (which Vault, where it runs, auth model) - revisit when spec 006
+  reaches Develop or when Key A backup is actually prioritized.
+- SSH access to onboarded VMs: login as `masterchief` on both Ubuntu
+  (passwordless sudo) and Windows — both over SSH (Windows uses
+  `ansible_shell_type: powershell`, not WinRM).
+  - **Decision 2026-10-20**: Windows scoped to the `masterchief` domain
+    user specifically, not "any local admin" - matching Ubuntu's
+    identity-specific model instead of the group-based one.
+  - **Real gap, not yet resolved**: Windows OpenSSH's
+    `administrators_authorized_keys` is checked for any local
+    Administrators-group member, regardless of which username is
+    specified at connect time - it isn't cryptographically bound to
+    one identity the way a per-user `authorized_keys` file is. Two
+    ways to actually get `masterchief`-only access, neither
+    implemented yet:
+    1. Add `masterchief` to the target's local Administrators group
+       (so it can use `administrators_authorized_keys`), and only ever
+       connect as `masterchief` by convention - closest to today's
+       working setup, but anyone else in that group with Key A/B could
+       still authenticate as themselves too.
+    2. Install the key into `masterchief`'s own per-user
+       `authorized_keys` instead (true identity-scoping, matching
+       Ubuntu) - but that requires `masterchief`'s Windows user profile
+       to already exist, which it doesn't until something triggers its
+       creation (e.g. one interactive logon, or scripted profile
+       creation). Not yet solved.
 - Shell on onboarded VMs: bash/sh on Ubuntu, PowerShell on Windows.
-- **Confirmed end-to-end on `dc` 2026-10-20**: `ssh -i
-  ~/.ssh/ai_deploy_targets Administrator@<target-ip>` from `ai-deploy`
+- **Confirmed end-to-end on `dc` 2026-10-20 (as `Administrator`, before
+  the `masterchief`-scoping decision above - not yet re-confirmed as
+  `masterchief`)**: `ssh -i ~/.ssh/ai_deploy_targets Administrator@<target-ip>` from `ai-deploy`
   works and gets a real PowerShell shell. Getting there from a fresh
   Windows Server 2025 VM needed two fixes beyond what "pre-baked SSH"
   was assumed to mean — both are now real requirements for any future
@@ -125,6 +159,12 @@ Read this at the start of every session. Every rule should trace back to an entr
     `ansible_shell_type: powershell` is a lie — the remote shell is
     actually cmd, and anything with a semicolon or PowerShell syntax
     fails confusingly.
+- **Not yet confirmed end-to-end for Ubuntu**: the prep script
+  (`utils/onboarding/ubuntu2604/`) passed its own verification on
+  `tmplubuntu2604`, but an actual `ai-deploy` → `tmplubuntu2604`
+  connection test wasn't properly attempted yet - the user suspects
+  SSH key access was the blocker. Revisit before treating Ubuntu
+  onboarding as proven the way Windows now is.
 - Rule: any destructive action on an onboarded VM always requires
   explicit confirmation regardless of mode.
 
@@ -148,9 +188,22 @@ Read this at the start of every session. Every rule should trace back to an entr
 
 ## Workflow
 - Read `BRIEF.md` first. Specs inherit its principles and non-goals.
-- Work from `specs/NNN-*/tasks.md`, one task at a time.
-- Don't write code for a feature until its `plan.md` has been approved.
-- A task is done only when its acceptance criteria pass via `<test command>`.
+- When a conversation converges on real, concrete scope not already on
+  the roadmap, proactively run `skills/new-feature/` (confirm with the
+  user first, don't spawn a folder for every passing idea) rather than
+  waiting to be asked.
+- Every roadmap item's Status is exactly one of Plan / Develop / Test /
+  Accept (`skills/new-feature/SKILL.md` has the full lifecycle). Keep
+  `ROADMAP.md` current as a feature moves between them.
+- Work from `specs/NNN-*/tasks.md`, one task at a time (Develop stage).
+- Don't write code for a feature until its `plan.md` has been approved
+  (still in Plan stage).
+- A feature only reaches Test once every acceptance criterion in its
+  spec runs as an actual automated test - built-without-error is never
+  treated as working.
+- Accept/reject at the Test→Accept gate is the user's call, not an
+  automatic pass. Log a reject in `retro.md` with which stage it
+  bounced back to and why.
 - If the spec is ambiguous, stop and ask. Don't guess.
 
 ## Scripts: write → test → approve

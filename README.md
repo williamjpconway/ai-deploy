@@ -32,12 +32,15 @@ it's a requirement in a feature spec.
 
 ## The loop
 
-1. **Brief**: write once (`templates/BRIEF.md`). Revisit only if the direction changes.
-2. **Roadmap**: list features in order. 001 = the thinnest end-to-end slice.
-3. **Spec**: copy `templates/feature/` to `specs/NNN-name/` for the top roadmap item.
-4. **Plan**: the agent proposes how. You approve before any code is written.
-5. **Tasks → Implement**: one task at a time, with tests after each.
-6. **Retro**: log mistakes in `retro.md` and route each fix (below). Then pick the next roadmap item.
+1. **Brief**: write once (`templates/BRIEF.md`, or run `skills/brief-intake/`). Revisit only if the direction changes.
+2. **Roadmap**: list features in order. 001 = the thinnest end-to-end slice. New features get added here — and get their spec folder — via `skills/new-feature/`, proactively, as they come up in conversation.
+3. **Plan stage**: `spec.md` (what/why) then `plan.md` (how — the agent proposes, you approve before any code is written).
+4. **Develop stage**: work `tasks.md` one task at a time, per `AGENTS.md`'s Workflow rule.
+5. **Test stage**: every acceptance criterion in `spec.md` runs as an actual automated test — built-without-error is never treated as working.
+6. **Accept stage**: you review the test results and make an explicit accept/reject call. Reject sends it back to Develop or Plan, logged in `retro.md`.
+7. **Retro**: log mistakes in `retro.md` and route each fix (below). Then pick the next roadmap item.
+
+Every roadmap item's Status is always exactly one of **Plan / Develop / Test / Accept** — see `skills/new-feature/SKILL.md` for the full lifecycle rules.
 
 ## Where a fix goes
 
@@ -51,6 +54,8 @@ it's a requirement in a feature spec.
 
 Each fix goes in **one** place. When in doubt, choose the more automated one.
 
-## Example
-The current BRIEF, ROADMAP and `specs/001-add-item/` are a filled-in example
-(a toy todo CLI) so you can see the structure working. Replace them with your real product.
+## Current product
+`BRIEF.md`, `ROADMAP.md` and `specs/` are no longer the toy example —
+they were replaced with the real product (`ai-deploy`) once the
+process itself was validated. If you're forking this repo as a
+template for a different product, that's what to replace next.
