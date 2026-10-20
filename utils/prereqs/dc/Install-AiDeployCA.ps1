@@ -10,9 +10,15 @@
     Verification specifically targets the "CA isn't opening" failure
     mode seen before: confirms CertSvc is actually running (not just
     installed), that certutil -ping succeeds, and that the Web
-    Enrollment site actually responds at https://localhost/certsrv -
+    Enrollment site actually responds at http://localhost/certsrv -
     "installed without error" is not treated as "works," per
     AGENTS.md's write/test/approve rule.
+
+    Checks HTTP, not HTTPS: Install-AdcsWebEnrollment only configures
+    the /certsrv site on IIS's default HTTP binding - it does not set
+    up an HTTPS binding. That's deliberately out of scope here (see the
+    earlier handoff notes' "HTTPS binding for /certsrv" item) and is
+    separate follow-up work, not a defect in this script.
 
     Supports -WhatIf for the install step.
 #>
@@ -37,18 +43,11 @@ function Test-CAHealth {
     }
     Write-Host "certutil -ping: OK"
 
-    $prevCallback = [System.Net.ServicePointManager]::ServerCertificateValidationCallback
-    [System.Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
-    try {
-        $response = Invoke-WebRequest -Uri "https://localhost/certsrv" -UseDefaultCredentials -ErrorAction Stop
-        if ($response.StatusCode -ne 200) {
-            throw "Web Enrollment returned status $($response.StatusCode), expected 200"
-        }
-        Write-Host "Web Enrollment (https://localhost/certsrv): OK (200)"
+    $response = Invoke-WebRequest -Uri "http://localhost/certsrv" -UseDefaultCredentials -ErrorAction Stop
+    if ($response.StatusCode -ne 200) {
+        throw "Web Enrollment returned status $($response.StatusCode), expected 200"
     }
-    finally {
-        [System.Net.ServicePointManager]::ServerCertificateValidationCallback = $prevCallback
-    }
+    Write-Host "Web Enrollment (http://localhost/certsrv): OK (200)"
 
     Write-Host "CA health check PASSED"
 }
