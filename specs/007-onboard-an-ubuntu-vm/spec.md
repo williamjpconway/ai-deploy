@@ -1,7 +1,7 @@
 # Spec 007: Onboard an Ubuntu VM
 
-**Status:** Draft
-**Date:** 2026-10-20
+**Status:** Ready
+**Date:** 2026-10-21
 **Brief:** [../../BRIEF.md](../../BRIEF.md) · **Roadmap item:** 007
 
 ## 1. Problem

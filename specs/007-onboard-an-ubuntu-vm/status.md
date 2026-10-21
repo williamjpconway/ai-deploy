@@ -1,8 +1,8 @@
 # Status 007: Onboard an Ubuntu VM
 
 **Stage:** Plan
-**Last reconciled:** never
-**Next:** waiting - not next on the roadmap
+**Last reconciled:** 2026-10-21
+**Next:** write plan.md + tasks.md with operator, then G3 - waiting on agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -11,7 +11,7 @@
 | Gate | Touchpoint | Who | Date | Result |
 |------|------------|-----|------|--------|
 | G1 | Start | masterchief | 2026-10-21 | Started |
-| G2 | Spec Ready | masterchief | | |
+| G2 | Spec Ready | masterchief | 2026-10-21 | Ready |
 | G3 | Plan approved -> Develop | masterchief | | |
 | G4 | Accept / reject | masterchief | | |
 
