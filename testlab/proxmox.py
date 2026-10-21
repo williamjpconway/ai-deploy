@@ -34,7 +34,7 @@ def _call(verb, path, params=None):
         url += "?" + urllib.parse.urlencode(params)
     elif params:
         data = urllib.parse.urlencode(params).encode()
-    req = urllib.request.Request(url, data=data, method=verb)
+    req = urllib.request.Request(url, data=data, method=verb)  # noqa: S310 - fixed https URL
     req.add_header(
         "Authorization", f"PVEAPIToken={env['PROXMOX_TOKEN_ID']}={env['PROXMOX_TOKEN_SECRET']}"
     )
