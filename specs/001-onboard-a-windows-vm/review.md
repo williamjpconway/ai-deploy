@@ -52,6 +52,54 @@ Reviewer inputs: `spec.md`, the diff above, the static check output - nothing el
 ### Outcome
 Not clean - back to Develop (fix tasks T9-T11 added to tasks.md)
 
+## Test run 2 - 2026-10-21
+**Diff reviewed:** ccec810..b8eab26
+
+### Tests
+Command (on `ai-deploy`): `AI_DEPLOY_TEST_TARGET=192.168.3.1 python3 -m pytest` - 27 passed, 1 skipped (destructive AC3; passed in the operator-run confirmed run against dc, code under test unchanged since)
+
+| AC | Test | Result |
+|----|------|--------|
+| AC1 | as run 1 | Pass |
+| AC2 | as run 1 | Pass |
+| AC3 | as run 1, plus SSH timeout reported as `[ssh]` not `[shell]` (fix T9) | Pass |
+| AC4 | as run 1, plus run lock -> `[busy]` (fix T10) | Pass |
+| AC5 | as run 1 | Pass |
+| AC6 | as run 1 | Pass |
+| AC7 | as run 1 | Pass |
+| AC8 | as run 1 | Pass |
+| AC9 | name-taken case now asserts the seeded IP (fix T11); occupied host file and mid-run file never overwritten (fix T10) | Pass |
+| AC10 | as run 1 | Pass |
+| AC11 | as run 1 | Pass |
+| AC12 | as run 1 | Pass |
+
+Fix tests T9/T10 were confirmed to fail against the pre-fix code (70d54d6).
+
+### Static checks
+| Check | Command | Result |
+|-------|---------|--------|
+| ruff lint | `ruff check .` | All checks passed |
+| ruff format | `ruff format --check .` | 80 files already formatted |
+
+### Independent review
+Reviewer inputs: `spec.md`, the diff above, the static check output - nothing else. Run 1 blocking findings 1-3: fixed in run 2.
+
+| # | Severity | Finding | Location | Status |
+|---|----------|---------|----------|--------|
+| 1 | advisory | Missing/unreadable/0644 Key B on ai-deploy reported as `[authentication]` with target-side causes; pre-check the key file (same as run 1 #6) | `onboard/checks.py` | open |
+| 2 | advisory | New-host ping runs in a staging dir without the real inventory's `group_vars/`/`host_vars/` | `onboard/cli.py`, `inventory.py` | open |
+| 3 | advisory | Conflict check misses `children:`/INI hosts; malformed YAML gives a traceback; IPs compared as strings (run 1 #5, #7) | `onboard/inventory.py` | open |
+| 4 | advisory | "already onboarded" doesn't check the entry's vars match R5 (run 1 #8) | `onboard/cli.py` | open |
+| 5 | advisory | Reserved names (`all`, `ungrouped`, `windows`) accepted (run 1 #10) | `onboard/cli.py` | open |
+| 6 | advisory | Non-22 `--port`: wrong `ssh-keygen -R` hint, no range check (run 1 #4) | `onboard/checks.py`, `cli.py` | open |
+| 7 | advisory | Spaces in known_hosts path break `ANSIBLE_SSH_COMMON_ARGS` (run 1 #9) | `onboard/checks.py` | open |
+| 8 | advisory | Destructive test: confirmation is process-only; a non-zero Set-ItemProperty skips the restore (run 1 #11) | `tests/live/test_destructive.py` | open |
+| 9 | advisory | `AI_DEPLOY_ANSIBLE` test hook in production code - document or rename | `onboard/checks.py` | open |
+| 10 | advisory | Identity matched on account name only - local `HOST\masterchief` would pass | `onboard/checks.py` | open |
+
+### Outcome
+Clean - waiting on G4
+
 ## Decision
 <!-- Accepted YYYY-MM-DD (masterchief)
      or Rejected YYYY-MM-DD (masterchief) -> Develop|Plan: <reason> -->
