@@ -9,9 +9,12 @@ Read this at the start of every session. Every rule should trace back to an entr
   unprivileged via `pam_unix`'s `unix_chkpwd` helper), htmx/Alpine.js
   frontend. `xterm.js` is scoped to spec 008 (terminal) only, not the
   general frontend. No Node.js - Python drives the terminal's PTY over
-  websockets directly. The rest of the product (onboarding scripts,
-  Ansible, playbooks) stays in PowerShell/bash per the existing Tools
-  rules - this stack is specifically for the web UI.
+  websockets directly. Onboarding (`onboard-windows`, spec 001) is
+  also Python + pytest (decided 2026-10-21), so the UI (spec 002) can
+  call the same code; it runs on `ai-deploy` and writes inventory to
+  `~/.config/ai-deploy/inventory/` (outside the repo). Target prep
+  scripts (`utils/`), Ansible and playbooks stay in PowerShell/bash
+  per the existing Tools rules.
 - Run tests: `<command>`
 - Checks (static, run at Test stage): `<commands>` - to be decided
   during spec 001's plan.
