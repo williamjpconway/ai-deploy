@@ -64,7 +64,7 @@ VM.
   template's) - so spec 001's onboarding passes against it.
 - **R4** A clean Ubuntu slot MUST have a unique hostname and network
   config (via Proxmox cloud-init) and pass Ubuntu onboarding's checks
-  (spec 007). AD join for Ubuntu: see open questions.
+  (spec 007). Ubuntu slots are not joined to AD.
 - **R5** The system MUST save a clean state per slot and reset a slot to
   it on request, without re-cloning.
 - **R6** The system MUST report a specific failure (which slot, which
@@ -106,10 +106,12 @@ VM.
   `vmbr0`. The token gets 403 on any other VM.
 - Templates: QEMU guest agent installed; DHCP available on `vmbr0`.
 - `tmpl-windows2025` is currently sealed without an answer file, so each
-  clone stops at the setup screens asking for a product key. It needs a
-  one-off re-seal with an answer file (product key, setup screens
-  skipped, local Administrator password, SSH host keys removed before
-  sealing) before R2/R3 can hold.
+  clone stops at the setup screens asking for a product key. It will be
+  rebuilt as VMID 9000 from the Windows Server 2025 evaluation ISO and
+  sealed with an answer file (no key; setup screens skipped; local
+  Administrator password; SSH prep from `Initialize-SshOnboarding.ps1`;
+  SSH host keys removed before sealing) before R2/R3 can hold
+  (decided 2026-10-21). The operator does the build and seal.
 - The operator's retail key must not go on test clones.
 - Confirmation (decided 2026-10-21, `AGENTS.md`): actions confined to
   the four slots and their computer objects in `OU=ai-deploy-test` need
@@ -129,12 +131,11 @@ VM.
       A Claude Code permission rule for the lab tooling's commands may
       also be needed (auto mode blocked 001's approved AC3 run) -
       deferred to plan.md, once the commands exist.
-- [ ] Windows product key for test clones: evaluation edition (needs a
-      new template from the evaluation ISO) or Microsoft's public KMS
-      client key in the answer file on the existing template (to be
-      confirmed it's accepted on a retail-installed image).
-- [ ] Re-sealed template: replace 9000 or create a new template ID (and
-      move the token's template permission to it).
+- [x] Windows product key for test clones: evaluation edition
+      (decided 2026-10-21) - a new Windows Server 2025 install from the
+      evaluation ISO, so the answer file carries no key.
+- [x] Template: the evaluation build replaces VMID 9000 (decided
+      2026-10-21) - no change to the token's template permission.
 - [ ] AD prep: the join-only account (join/remove computers in
       `OU=ai-deploy-test` only), the OU, and Group Policy on it
       (`masterchief` in local Administrators; disable machine account
@@ -144,9 +145,11 @@ VM.
       destroying a VM is believed to remove its slot's Proxmox
       permissions - unverified. Also: may the tooling ever destroy and
       re-clone a slot, and if so how are permissions restored?
-- [ ] IPs: plain DHCP (IP read from the guest agent each time) or
-      reservations for the four slots.
-- [ ] Ubuntu slots: join AD too, or not? (Spec 007 doesn't require it.)
+- [ ] IPs: DHCP reservations for the four slots (decided 2026-10-21).
+      Still open: the four IPs, which DHCP server holds the
+      reservations, and the fixed MAC per slot.
+- [x] Ubuntu slots: no AD join for now (decided 2026-10-21) - spec 007
+      uses the local `masterchief` user with Key B.
 - [ ] Storage: is `local` needed (cloud-init snippets) or can that
       permission be removed?
 - [ ] AC2: the time limit for bringing up a Windows slot.
