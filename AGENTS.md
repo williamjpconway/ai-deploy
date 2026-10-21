@@ -20,12 +20,14 @@ Read this at the start of every session. Every rule should trace back to an entr
   hostname `ai-deploy`, IP `192.168.3.2` (eth0), Ubuntu 26.04.1 LTS, VM
   on Proxmox provisioned via cloud-init, user `masterchief`. Claude Code
   install still pending.
-- Onboarding invocation model (decided 2026-10-20, detail still
-  pending): two-phase - initiated client-side by running the SSH
-  script, completed server-side by an `onboard-windows` or
-  `onboard-ubuntu` action that runs on the target. Not yet decided:
-  exact script names/locations, how results get back into Ansible
-  inventory (which lives on `ai-deploy`, not the target).
+- Onboarding invocation model (decided 2026-10-20, clarified
+  2026-10-21 in spec 001): the SSH prep script
+  (`utils/onboarding/<os>/`) is baked into the VM template and assumed
+  already run - the copy in `utils/` is only for re-running by hand.
+  Onboarding itself (`onboard-windows` / `onboard-ubuntu`) runs on
+  `ai-deploy` against the target and writes Ansible inventory on
+  `ai-deploy`. Nothing runs on the target except over SSH. Exact
+  script names/locations: decided in each spec's plan.
 
 ## Tools
 - Script naming, per ecosystem convention (deliberate, not an
@@ -91,9 +93,10 @@ Read this at the start of every session. Every rule should trace back to an entr
     ```
     Password authentication is now disabled on `ai-deploy` (publickey
     only, verified) — see the hardening note below for how and why.
-  - **Key B** — `ai-deploy` to each onboarded target (e.g. `dc`). Not
-    yet generated. Will be created on `ai-deploy` itself by
-    `utils/prereqs/ai-deploy/new-target-key.sh` (e.g. `~/.ssh/ai_deploy_targets`);
+  - **Key B** — `ai-deploy` to each onboarded target (e.g. `dc`).
+    Generated (confirmed present 2026-10-21) at
+    `~/.ssh/ai_deploy_targets` on `ai-deploy`, by
+    `utils/prereqs/ai-deploy/new-target-key.sh`;
     its public half must be added to each target's authorized keys
     before that target can be onboarded — this is not automatically
     pre-baked for real targets, only assumed for hypothetical ones.
@@ -147,6 +150,16 @@ Read this at the start of every session. Every rule should trace back to an entr
        to already exist, which it doesn't until something triggers its
        creation (e.g. one interactive logon, or scripted profile
        creation). Not yet solved.
+  - **Decision 2026-10-21 (spec 001)**: option 1 for now - `masterchief`
+    is a member of each Windows target's Administrators group (a
+    template/prep precondition; onboarding verifies it, never sets it).
+    Option 2 stays open as the least-privilege path.
+  - **Known risk, not yet fixed**: on a domain controller there is no
+    local Administrators group - membership means the domain's
+    BUILTIN\Administrators, effectively admin on every DC. Key B on
+    `ai-deploy` is therefore a domain-admin-equivalent credential
+    (key-based, no password), alongside the Domain Admin account noted
+    below.
 - Shell on onboarded VMs: bash/sh on Ubuntu, PowerShell on Windows.
 - **Confirmed end-to-end on `dc` 2026-10-20 (as `Administrator`, before
   the `masterchief`-scoping decision above - not yet re-confirmed as

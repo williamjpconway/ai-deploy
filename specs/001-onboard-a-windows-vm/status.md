@@ -1,8 +1,8 @@
 # Status 001: Onboard a Windows VM
 
 **Stage:** Plan
-**Last reconciled:** never
-**Next:** let's plan 001 - waiting on operator (first on the roadmap)
+**Last reconciled:** 2026-10-21
+**Next:** write plan.md + tasks.md with operator (Python + pytest decided), then G3 - waiting on agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -10,8 +10,8 @@
 ## Gates
 | Gate | Touchpoint | Who | Date | Result |
 |------|------------|-----|------|--------|
-| G1 | Start | masterchief | | |
-| G2 | Spec Ready | masterchief | | |
+| G1 | Start | masterchief | 2026-10-21 | Started |
+| G2 | Spec Ready | masterchief | 2026-10-21 | Ready |
 | G3 | Plan approved -> Develop | masterchief | | |
 | G4 | Accept / reject | masterchief | | |
 
