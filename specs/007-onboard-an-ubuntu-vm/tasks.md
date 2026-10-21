@@ -17,3 +17,4 @@
 - [x] **T11** (fix, run 1 - review finding 2) `testlab/proxmox.py` refuses any VMID outside 9101-9110 / 9201-9210 before calling the API; unit test that an out-of-range VMID raises without a network call (covers AC6 test tooling)
 - [x] **T12** (fix, run 1 - review finding 1) AC6 lab fixture asserts the slot's guest-agent IP equals `AI_DEPLOY_TEST_TARGET_UBUNTU` before snapshotting or breaking anything; mismatch fails with nothing changed (covers AC6)
 - [x] **T13** (fix, run 2 - review finding 1) AC3 fixture puts the drop-in + restart inside the `try:`, so the drop-in is always removed and sshd restarted, even if the setup restart fails (covers AC3)
+- [ ] **T14** (fix, run 3 - review finding 1) AC3 live fixture refuses a non-slot Ubuntu target unless the operator confirms: with `AI_DEPLOY_TEST_LAB_VMID` set, assert the slot IP = target before changing sshd (as AC6); without it, skip unless an explicit confirmation flag is passed (covers AC3)
