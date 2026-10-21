@@ -21,3 +21,4 @@
 - 2026-10-20 - Spec written (Draft)
 - 2026-10-21 - Lifecycle rework: status.md added - UI Validate/Onboard (R8-R9, AC6-AC8) moved to spec 002; 001 is now CLI-only and first on the roadmap
 - 2026-10-21 - Spec challenged to Ready (R9 host keys, R10 inputs, R4/R6 failure paths, AC6 reworded, AC7-AC12 added); plan.md + tasks.md written - Python + pytest, inventory in ~/.config/ai-deploy/inventory/, push+pull to ai-deploy, ruff checks, non-destructive tests vs 192.168.3.1; G2 + G3 approved
+- 2026-10-21 - Develop started at ccec810
