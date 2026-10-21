@@ -13,6 +13,7 @@ class Result:
     returncode: int
     stdout: str
     stderr: str
+    timed_out: bool = False
 
 
 class Runner:
@@ -26,5 +27,5 @@ class Runner:
         try:
             proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, env=env)
         except subprocess.TimeoutExpired:
-            return Result(124, "", f"timed out after {timeout}s")
+            return Result(124, "", f"timed out after {timeout}s", timed_out=True)
         return Result(proc.returncode, proc.stdout, proc.stderr)

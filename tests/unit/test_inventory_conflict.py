@@ -9,7 +9,7 @@ from onboard.cli import main
 @pytest.mark.parametrize(
     "seed_name, seed_ip, conflicting",
     [
-        ("win-test", "192.168.3.9", "win-test"),  # name taken by another IP
+        ("win-test", "192.168.3.9", "192.168.3.9"),  # name taken by another IP
         ("other", "192.168.3.1", "other"),  # IP taken by another name
     ],
 )

@@ -27,11 +27,15 @@ class StubRunner:
         identity=(0, GOOD_IDENTITY, ""),
         ansible_rc=0,
         tcp_error=None,
+        ssh_timeout=False,
+        on_ping=None,
     ):
         self.shell_probe = shell_probe
         self.identity = identity
         self.ansible_rc = ansible_rc
         self.tcp_error = tcp_error
+        self.ssh_timeout = ssh_timeout
+        self.on_ping = on_ping
         self.calls = []
 
     def tcp_connect(self, host, port, timeout):
@@ -43,8 +47,12 @@ class StubRunner:
         self.calls.append(("run", list(argv)))
         joined = " ".join(argv)
         if "win_ping" in joined:
+            if self.on_ping:
+                self.on_ping()
             err = "" if self.ansible_rc == 0 else "win-test | UNREACHABLE!"
             return Result(self.ansible_rc, "", err)
+        if self.ssh_timeout and argv[0] == "ssh":
+            return Result(124, "", f"timed out after {timeout}s", timed_out=True)
         if "S-1-5-32-544" in joined:
             return Result(*self.identity)
         if "PSOK" in joined:

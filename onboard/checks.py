@@ -76,6 +76,14 @@ def ssh_argv(ip, port, key, known_hosts, command):
 def ssh(runner, ip, port, key, known_hosts, command):
     """Run one command over SSH, turning host-key and auth refusals into R9/R2 failures."""
     result = runner.run(ssh_argv(ip, port, key, known_hosts, command), timeout=SSH_TIMEOUT)
+    if result.timed_out:
+        # TCP already answered (R1), so this is a stalled session, not a shell problem.
+        raise CheckFailed(
+            "ssh",
+            f"SSH to {ip} connected but the session didn't finish within {SSH_TIMEOUT}s - "
+            "the target is slow or hung (e.g. a user profile load). Nothing about its "
+            "shell or identity was checked.",
+        )
     if result.returncode == 255:
         err = result.stderr
         if "REMOTE HOST IDENTIFICATION HAS CHANGED" in err or "Host key verification failed" in err:

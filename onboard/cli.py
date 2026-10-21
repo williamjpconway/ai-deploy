@@ -25,6 +25,7 @@ EXIT_CODES = {
     "identity": 8,
     "ansible": 9,
     "ssh": 10,
+    "busy": 11,
 }
 
 
@@ -63,8 +64,21 @@ def parse(argv):
 
 
 def onboard(args, runner):
+    try:
+        with inventory.locked(args.inventory_dir):
+            return _onboard(args, runner)
+    except inventory.Busy as e:
+        raise CheckFailed(
+            "busy", f"another onboard-windows run holds {e} - try again when it finishes"
+        ) from None
+
+
+def _onboard(args, runner):
     hosts = inventory.load_hosts(args.inventory_dir)
     state, conflict = inventory.find(hosts, args.name, args.ip)
+    if state == "new" and (taken := inventory.file_taken(args.inventory_dir, args.name)):
+        conflict = f"{taken} already exists but doesn't hold '{args.name}' ({args.ip})"
+        state = "conflict"
     if state == "conflict":
         raise CheckFailed("inventory-conflict", f"{conflict} - inventory left unchanged")
 
@@ -81,6 +95,10 @@ def onboard(args, runner):
     try:
         checks.ansible_ping(runner, staged.dir, args.name, args.known_hosts)
         staged.commit()
+    except inventory.Clobber as e:
+        raise CheckFailed(
+            "inventory-conflict", f"{e} appeared during this run - left it as it is"
+        ) from None
     finally:
         staged.discard()
     return f"onboarded {args.name} ({args.ip}) into {args.inventory_dir}"
