@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Installs Ansible and ansible-lint on ai-deploy via pipx (the upstream-
-# recommended install method for both tools, usually newer than distro
-# apt packages).
+# Installs Ansible, ansible-lint and ruff on ai-deploy via pipx (the upstream-
+# recommended install method for all three, usually newer than distro
+# apt packages). ruff is the static check for the Python code (spec 001).
 #
 # Idempotent: skips anything already installed.
 # Supports --dry-run: prints what would be installed without installing,
@@ -45,7 +45,13 @@ else
   run pipx install ansible-lint
 fi
 
+if command -v ruff >/dev/null 2>&1; then
+  echo "ruff already installed ($(ruff --version)), skipping"
+else
+  run pipx install ruff
+fi
+
 echo
 echo "Note: if this is the first pipx install, you may need to restart"
-echo "your shell (or 'source ~/.bashrc') before ansible/ansible-lint show"
+echo "your shell (or 'source ~/.bashrc') before ansible/ansible-lint/ruff show"
 echo "up on PATH."
