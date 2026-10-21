@@ -1,8 +1,8 @@
 # Status 007: Onboard an Ubuntu VM
 
-**Stage:** Develop
+**Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** T10 - operator copies template candidate 9202 back to 9001; then agent re-clones 9201, runs full suite incl. destructive, -> Test - waiting on operator
+**Next:** Test run 1 (review.md, static checks, independent review) - waiting on operator "build 007"
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -23,3 +23,4 @@
 - 2026-10-21 - Spec brought to 001 parity and marked Ready; plan + tasks written - shared core with per-OS profiles, password-auth via offered methods, AC6 live via lab snapshot; G2 + G3 approved
 - 2026-10-21 - Develop started at dfe1a84
 - 2026-10-21 - T1-T9 done: shared core refactor (001 suite green), onboard-ubuntu with identity/sudo + password-auth checks, testlab snapshot helper; 73 tests pass, AC3 + AC6 passed for real on slot 9201; found sshd PerSourcePenalties lockout -> ai-deploy exempted in initialize-ssh-onboarding.sh (T10, template copy-back pending)
+- 2026-10-21 - T10 done: template 9001 copied back, 9201 re-cloned (carries the PerSourcePenalties exemption); 73 pass + 2 Ubuntu destructive pass, dc destructive not run; full suite passed across two runs, not one, because the slot changed DHCP IP (.83 -> .84) mid-run - operator accepted; per-slot DHCP reservations suggested for 009 -> Test
