@@ -1,0 +1,9 @@
+#!/usr/bin/env python3
+"""Onboard an Ubuntu VM as a verified Ansible target (spec 007).
+
+Usage: onboard-ubuntu --name <inventory-name> --ip <ip>
+"""
+
+import sys
+
+sys.exit(1)

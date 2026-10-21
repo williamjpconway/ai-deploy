@@ -94,3 +94,53 @@ def check_tag(output):
         if "FAILED [" in line:
             return line.split("FAILED [", 1)[1].split("]", 1)[0]
     return None
+
+
+GOOD_UBUNTU_IDENTITY = "ID:masterchief|SUDO:yes"
+KEYS_ONLY = "masterchief@192.168.3.1: Permission denied (publickey).
+"
+
+
+class UbuntuStubRunner(StubRunner):
+    """Answers onboard-ubuntu's processes: the identity/sudo probe (`sudo -n true`),
+    the offered-auth-methods probe (`PreferredAuthentications=none`) and the
+    Ansible ping. Anything else - e.g. a Windows probe - is a test failure."""
+
+    def __init__(self, identity=(0, GOOD_UBUNTU_IDENTITY, ""), methods=(255, "", KEYS_ONLY), **kw):
+        super().__init__(identity=identity, **kw)
+        self.methods = methods
+
+    def run(self, argv, timeout, env=None):
+        self.calls.append(("run", list(argv), env))
+        joined = " ".join(argv)
+        if "ansible.builtin.ping" in joined:
+            if self.on_ping:
+                self.on_ping()
+            err = "" if self.ansible_rc == 0 else "ubuntu-test | UNREACHABLE!"
+            return Result(self.ansible_rc, "", err)
+        if self.ssh_timeout and argv[0] == "ssh":
+            return Result(124, "", f"timed out after {timeout}s", timed_out=True)
+        if "PreferredAuthentications=none" in joined:
+            return Result(*self.methods)
+        if "sudo -n true" in joined:
+            return Result(*self.identity)
+        raise AssertionError(f"unexpected command for onboard-ubuntu: {argv}")
+
+
+def write_ubuntu_host(inventory_dir, name, ip, key="~/.ssh/ai_deploy_targets"):
+    """Seed an Ubuntu inventory host file in the format 007's R5 describes."""
+    inventory_dir = Path(inventory_dir)
+    inventory_dir.mkdir(parents=True, exist_ok=True)
+    data = {
+        "ubuntu": {
+            "hosts": {
+                name: {
+                    "ansible_host": ip,
+                    "ansible_connection": "ssh",
+                    "ansible_user": "masterchief",
+                    "ansible_ssh_private_key_file": key,
+                }
+            }
+        }
+    }
+    (inventory_dir / f"{name}.yml").write_text(yaml.safe_dump(data, sort_keys=False))

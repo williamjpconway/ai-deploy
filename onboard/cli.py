@@ -117,7 +117,7 @@ def _onboard(args, runner):
     return f"onboarded {args.name} ({args.ip}) into {args.inventory_dir}"
 
 
-def main(argv=None, runner=None):
+def main(argv=None, runner=None, profile=None):
     try:
         args = parse(sys.argv[1:] if argv is None else argv)
         print(onboard(args, runner or Runner()))

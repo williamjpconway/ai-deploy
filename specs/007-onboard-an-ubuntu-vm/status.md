@@ -21,3 +21,4 @@
 - 2026-10-20 - Spec written (Draft)
 - 2026-10-21 - Lifecycle rework: status.md added
 - 2026-10-21 - Spec brought to 001 parity and marked Ready; plan + tasks written - shared core with per-OS profiles, password-auth via offered methods, AC6 live via lab snapshot; G2 + G3 approved
+- 2026-10-21 - Develop started at dfe1a84
