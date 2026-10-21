@@ -1,8 +1,8 @@
 # Status 001: Onboard a Windows VM
 
-**Stage:** Develop
+**Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** T5 - operator runs the confirmed AC3 destructive test on dc (auto mode blocked the agent from running it), then Test run 1 - waiting on operator
+**Next:** Test run 1 in progress - waiting on agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
