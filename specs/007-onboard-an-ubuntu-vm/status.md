@@ -2,7 +2,7 @@
 
 **Stage:** Develop
 **Last reconciled:** 2026-10-21
-**Next:** build 007 - T1 (AC tests, confirm they fail) - waiting on agent
+**Next:** T10 - operator copies template candidate 9202 back to 9001; then agent re-clones 9201, runs full suite incl. destructive, -> Test - waiting on operator
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -22,3 +22,4 @@
 - 2026-10-21 - Lifecycle rework: status.md added
 - 2026-10-21 - Spec brought to 001 parity and marked Ready; plan + tasks written - shared core with per-OS profiles, password-auth via offered methods, AC6 live via lab snapshot; G2 + G3 approved
 - 2026-10-21 - Develop started at dfe1a84
+- 2026-10-21 - T1-T9 done: shared core refactor (001 suite green), onboard-ubuntu with identity/sudo + password-auth checks, testlab snapshot helper; 73 tests pass, AC3 + AC6 passed for real on slot 9201; found sshd PerSourcePenalties lockout -> ai-deploy exempted in initialize-ssh-onboarding.sh (T10, template copy-back pending)
