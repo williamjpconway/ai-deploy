@@ -15,3 +15,7 @@
 - [x] **T9** (fix, run 1) SSH timeout and other non-255 transport failures reported as `[ssh]`, never `[shell]`/`[identity]`; unit test for rc 124 (finding 1; covers AC3, AC6)
 - [x] **T10** (fix, run 1) Commit never overwrites an existing host file (no-clobber link), and a lock spans conflict check -> commit; unit tests (finding 2; covers AC4, AC9)
 - [x] **T11** (fix, run 1) AC9 name-taken test asserts the seeded conflicting IP (finding 3; covers AC9)
+- [ ] **T12** (fix, G4 reject) Check Key B before any network call: exists, readable, not group/world-accessible - else a named `[key]` failure naming the fix (run 2 advisory #1; covers AC2)
+- [ ] **T13** (fix, G4 reject) Unreadable/malformed inventory YAML -> named `[inventory]` failure; missing `ssh`/`ansible` binary -> named failure, never a traceback (run 2 advisory #3b; covers AC9, AC7)
+- [ ] **T14** (fix, G4 reject) `--port` range 1-65535 as a usage failure; host-key hint uses `[ip]:port` when port is not 22 (run 2 advisory #6; covers AC12, AC10)
+- [ ] **T15** (fix, G4 reject) known_hosts path with spaces passed safely to Ansible's ssh args (run 2 advisory #7; covers AC5)

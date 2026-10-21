@@ -1,8 +1,8 @@
 # Status 001: Onboard a Windows VM
 
-**Stage:** Test
+**Stage:** Develop
 **Last reconciled:** 2026-10-21
-**Next:** waiting on G4 - review 001 (operator)
+**Next:** build 001 - fix tasks T12-T15 (clearer errors) - waiting on agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -13,7 +13,7 @@
 | G1 | Start | masterchief | 2026-10-21 | Started |
 | G2 | Spec Ready | masterchief | 2026-10-21 | Ready |
 | G3 | Plan approved -> Develop | masterchief | 2026-10-21 | Approved |
-| G4 | Accept / reject | masterchief | | |
+| G4 | Accept / reject | masterchief | 2026-10-21 | Rejected -> Develop: "can we fix any of the advisory findings now?" - fix the clearer-errors group (run 2 advisory #1, #3b, #6, #7) |
 
 ## Work log
 <!-- One line per session, newest last. Never edit old lines.
