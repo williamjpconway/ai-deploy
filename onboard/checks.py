@@ -1,0 +1,150 @@
+"""The checks onboarding runs against a target, in order. Each raises CheckFailed."""
+
+import os
+import shutil
+from pathlib import Path
+
+USER = "masterchief"
+ADMINISTRATORS_SID = "S-1-5-32-544"
+TCP_TIMEOUT = 5
+SSH_TIMEOUT = 60
+ANSIBLE_TIMEOUT = 120
+
+SHELL_PROBE = "Write-Output ('PSOK:' + $PSVersionTable.PSVersion.Major)"
+IDENTITY_PROBE = (
+    "$i = [Security.Principal.WindowsIdentity]::GetCurrent(); "
+    "$admin = [bool]($i.Groups | Where-Object { $_.Value -eq '" + ADMINISTRATORS_SID + "' }); "
+    "Write-Output ('ID:' + $i.Name + '|ADMIN:' + $admin)"
+)
+
+
+class CheckFailed(Exception):
+    def __init__(self, check, message):
+        super().__init__(message)
+        self.check = check
+        self.message = message
+
+
+def reachability(runner, ip, port):
+    """R1: plain TCP to the SSH port, before any authentication."""
+    try:
+        runner.tcp_connect(ip, port, TCP_TIMEOUT)
+    except ConnectionRefusedError:
+        raise CheckFailed(
+            "reachability",
+            f"{ip}:{port} refused the connection - nothing is listening for SSH there "
+            "(is sshd running?)",
+        ) from None
+    except TimeoutError:
+        raise CheckFailed(
+            "reachability",
+            f"{ip}:{port} did not answer within {TCP_TIMEOUT}s - the host is down, "
+            "or a firewall is dropping SSH (check the OpenSSH-Server-In-TCP rule's profile)",
+        ) from None
+    except OSError as e:
+        raise CheckFailed(
+            "reachability", f"{ip}:{port} is unreachable: {e.strerror or e}"
+        ) from None
+
+
+def ssh_argv(ip, port, key, known_hosts, command):
+    return [
+        "ssh",
+        "-F", "/dev/null",
+        "-p", str(port),
+        "-i", str(key),
+        "-o", "IdentitiesOnly=yes",
+        "-o", "BatchMode=yes",
+        "-o", "ConnectTimeout=10",
+        # R9: OpenSSH's own trust-on-first-use. Unknown keys are recorded,
+        # changed keys are refused and never replaced.
+        "-o", "StrictHostKeyChecking=accept-new",
+        "-o", f"UserKnownHostsFile={known_hosts}",
+        f"{USER}@{ip}",
+        command,
+    ]
+
+
+def ssh(runner, ip, port, key, known_hosts, command):
+    """Run one command over SSH, turning host-key and auth refusals into R9/R2 failures."""
+    result = runner.run(ssh_argv(ip, port, key, known_hosts, command), timeout=SSH_TIMEOUT)
+    if result.returncode == 255:
+        err = result.stderr
+        if "REMOTE HOST IDENTIFICATION HAS CHANGED" in err or "Host key verification failed" in err:
+            raise CheckFailed(
+                "host-key",
+                f"{ip} presented a different SSH host key from the one recorded in "
+                f"{known_hosts}. If the VM was rebuilt or the IP reused, clear the old key "
+                f"with: ssh-keygen -R {ip} -f {known_hosts}",
+            )
+        if "Permission denied" in err:
+            raise CheckFailed(
+                "authentication",
+                f"{ip} rejected key {key} for {USER}. Either the key isn't in "
+                "C:\\ProgramData\\ssh\\administrators_authorized_keys on the target, or "
+                f"{USER} isn't a member of the target's Administrators group (sshd only "
+                "reads that file for Administrators members).",
+            )
+        raise CheckFailed("ssh", f"SSH to {ip} failed: {err.strip() or 'no error output'}")
+    return result
+
+
+def shell(runner, ip, port, key, known_hosts):
+    """R2 + R3: authenticate, and prove the remote shell is PowerShell by its output."""
+    result = ssh(runner, ip, port, key, known_hosts, SHELL_PROBE)
+    for line in result.stdout.splitlines():
+        line = line.strip()
+        if line.startswith("PSOK:") and line[5:].isdigit():
+            return
+    raise CheckFailed(
+        "shell",
+        f"{ip}'s SSH shell is not PowerShell (probe output: "
+        f"{(result.stdout + result.stderr).strip()[:200]!r}). Windows OpenSSH defaults to "
+        "cmd.exe until HKLM:\\SOFTWARE\\OpenSSH DefaultShell is set to powershell.exe.",
+    )
+
+
+def identity(runner, ip, port, key, known_hosts):
+    """R8: the session is masterchief and a member of Administrators."""
+    result = ssh(runner, ip, port, key, known_hosts, IDENTITY_PROBE)
+    line = next((x.strip() for x in result.stdout.splitlines() if x.startswith("ID:")), "")
+    name, _, admin = line[3:].partition("|ADMIN:")
+    account = name.rsplit("\\", 1)[-1]
+    if account.lower() != USER:
+        raise CheckFailed(
+            "identity", f"session on {ip} is {name or 'unknown'!r}, not {USER}"
+        )
+    if admin != "True":
+        raise CheckFailed(
+            "identity",
+            f"session on {ip} is {name} but it isn't a member of Administrators "
+            f"({ADMINISTRATORS_SID})",
+        )
+
+
+def ansible_bin():
+    override = os.environ.get("AI_DEPLOY_ANSIBLE")
+    if override:
+        return override
+    return shutil.which("ansible") or str(Path.home() / ".local" / "bin" / "ansible")
+
+
+def ansible_ping(runner, inventory, name, known_hosts):
+    """R6: Ansible itself reaches the target through the given inventory."""
+    env = dict(
+        os.environ,
+        ANSIBLE_SSH_COMMON_ARGS=f"-o UserKnownHostsFile={known_hosts}",
+        ANSIBLE_HOST_KEY_CHECKING="True",
+    )
+    result = runner.run(
+        [ansible_bin(), "-i", str(inventory), name, "-m", "ansible.windows.win_ping"],
+        timeout=ANSIBLE_TIMEOUT,
+        env=env,
+    )
+    if result.returncode != 0:
+        detail = (result.stdout + result.stderr).strip()[-400:]
+        raise CheckFailed(
+            "ansible",
+            f"Ansible could not reach {name} through its inventory entry "
+            f"(win_ping exit {result.returncode}): {detail}",
+        )
