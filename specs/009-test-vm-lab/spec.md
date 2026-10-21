@@ -120,6 +120,27 @@ VM.
   templates, other OUs - keeps the confirmation rules.
 - The brief's principles apply to the tooling: idempotent, verify
   don't assume.
+- Spike results (2026-10-21, outside the lifecycle - no feature code):
+  - Token can clone 9000/9001 into the slots, set the MAC, start, stop
+    and delete. **Deleting a VM removes its `/vms/<id>` permission**
+    (confirmed on 9201; re-baking 9000 removed `/vms/9000` too) - the
+    operator re-adds it after any rebuild. Adding a cloud-init drive
+    needs `VM.Config.CDROM` (now granted).
+  - Windows template 9000 re-sealed 2026-10-21 from a clone: answer file
+    (retail key, random name, `SkipRearm`) plus `SetupComplete.cmd`
+    that deletes both answer-file copies (the answer file's own
+    `FirstLogonCommands` cleanup never runs - clones are only reached
+    over SSH) and creates SSH host keys if missing; host keys removed
+    before sysprep. A fresh clone: IP via guest agent in 42 s, SSH with
+    Key B in 59 s, unique host key, random name, no answer file left,
+    licensed, PowerShell shell.
+  - `dc` and the pre-2026-10-21 template shared one SSH host key
+    (`SHA256:AQk3...`) - `dc` should get its own (operator decision,
+    change on `dc`).
+  - Ubuntu template 9001: Key B and passwordless sudo work on a clone,
+    but qemu-guest-agent is missing and clones share hostname,
+    machine-id and SSH host keys. `utils/onboarding/ubuntu2604/seal-template.sh`
+    drafted to fix it (dry-run only so far).
 
 ## 8. Open questions
 - [x] Scope change: carve-out agreed 2026-10-21 and written into
