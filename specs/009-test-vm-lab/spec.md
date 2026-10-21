@@ -66,7 +66,8 @@ VM.
   config (via Proxmox cloud-init) and pass Ubuntu onboarding's checks
   (spec 007). Ubuntu slots are not joined to AD.
 - **R5** The system MUST save a clean state per slot and reset a slot to
-  it on request, without re-cloning.
+  it on request, without re-cloning. It MUST NOT destroy a slot;
+  rebuilding a slot from scratch is an operator step.
 - **R6** The system MUST report a specific failure (which slot, which
   step) when a slot can't reach clean, and leave other slots and all
   non-slot VMs untouched.
@@ -80,7 +81,7 @@ VM.
   9101-9202 (or a third Windows VM), when it runs, then Proxmox refuses
   it and the tooling reports which slot limit was hit.
 - **AC2** (R2, R3) Given an empty Windows slot, when it's brought up,
-  then within a set time it's renamed, domain-joined in
+  then within 20 minutes it's renamed, domain-joined in
   `OU=ai-deploy-test`, has its own SSH host keys, and spec 001's
   `onboard-windows` passes against it.
 - **AC3** (R2, R4) Given an empty Ubuntu slot, when it's brought up,
@@ -134,25 +135,29 @@ VM.
 - [x] Windows product key for test clones: evaluation edition
       (decided 2026-10-21) - a new Windows Server 2025 install from the
       evaluation ISO, so the answer file carries no key.
-- [x] Template: the evaluation build replaces VMID 9000 (decided
-      2026-10-21) - no change to the token's template permission.
+- [x] Template: the operator moves the current retail template to VMID
+      9003 (kept for real VMs, never in the token's scope) and the
+      evaluation build becomes VMID 9000 (decided 2026-10-21). Re-check
+      the token's ACL on `/vms/9000` after the swap - removing the old
+      9000 very likely removes it.
 - [ ] AD prep: the join-only account (join/remove computers in
       `OU=ai-deploy-test` only), the OU, and Group Policy on it
       (`masterchief` in local Administrators; disable machine account
       password changes so snapshot rollbacks don't break the domain
       trust). Names and where the join credential is stored.
-- [ ] Reset model: rollback to a `clean` snapshot is proposed because
-      destroying a VM is believed to remove its slot's Proxmox
-      permissions - unverified. Also: may the tooling ever destroy and
-      re-clone a slot, and if so how are permissions restored?
+- [x] Reset model: rollback only (decided 2026-10-21). Each slot is
+      cloned once and snapshotted `clean`; every reset is a rollback.
+      Rebuilding a slot from scratch (destroy + re-clone) is an operator
+      step, since destroying a VM very likely removes its slot
+      permission - the operator re-adds it.
 - [ ] IPs: DHCP reservations for the four slots (decided 2026-10-21).
       Still open: the four IPs, which DHCP server holds the
       reservations, and the fixed MAC per slot.
 - [x] Ubuntu slots: no AD join for now (decided 2026-10-21) - spec 007
       uses the local `masterchief` user with Key B.
-- [ ] Storage: is `local` needed (cloud-init snippets) or can that
-      permission be removed?
-- [ ] AC2: the time limit for bringing up a Windows slot.
+- [x] Storage: keep `local` (decided 2026-10-21) - room for custom
+      cloud-init snippets later.
+- [x] AC2 time limit: 20 minutes (decided 2026-10-21).
 
 ---
 ### Ready checklist
