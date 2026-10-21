@@ -16,6 +16,9 @@ This script:
 - Hardens sshd against password authentication, including re-flipping
   cloud-init's own config if it tries to re-enable it.
 - Ensures `ufw` (if active) allows SSH.
+- Exempts `ai-deploy` (192.168.3.2, `--exempt-ip=` to change) from
+  sshd's `PerSourcePenalties` lockout, so a few failed onboarding runs
+  or tests can't block the management host (OpenSSH 9.8+).
 - Verifies all of the above actually took effect before reporting
   success.
 
@@ -49,8 +52,9 @@ sudo still worked.
 - Key-based auth works as `masterchief`; password auth is rejected.
 - `masterchief` has passwordless sudo.
 
-Onboarding (`specs/007-onboard-an-ubuntu-vm/`) verifies these are true
-every time it runs - it never configures them itself. If verification
+Onboarding (`bin/onboard-ubuntu`, spec 007) verifies these are true -
+including that the server really doesn't offer password login - every
+time it runs - it never configures them itself. If verification
 fails on a VM that's supposed to already be a template of this recipe,
 that's a sign the template itself needs rebuilding, not something for
 onboarding to patch around.
