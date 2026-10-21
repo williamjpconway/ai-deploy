@@ -152,3 +152,13 @@ def test_ac10_changed_host_key_fails_and_is_not_replaced(
     assert f"ssh-keygen -R {target_ip}" in proc.output
     assert known_hosts.read_bytes() == before
     assert snapshot(inventory_dir) == {}
+
+
+def test_known_hosts_path_with_spaces_works_end_to_end(cli, target_ip, tmp_path):
+    """T15: the path reaches both raw ssh and Ansible's ssh as one file."""
+    kh = tmp_path / "my keys" / "known hosts"
+    kh.parent.mkdir()
+    proc = cli("--name", NAME, "--ip", target_ip, "--known-hosts", str(kh))
+    assert proc.returncode == 0, proc.output
+    found = subprocess.run(["ssh-keygen", "-F", target_ip, "-f", str(kh)], capture_output=True)
+    assert found.returncode == 0

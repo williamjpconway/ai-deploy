@@ -44,7 +44,7 @@ class StubRunner:
             raise self.tcp_error
 
     def run(self, argv, timeout, env=None):
-        self.calls.append(("run", list(argv)))
+        self.calls.append(("run", list(argv), env))
         joined = " ".join(argv)
         if "win_ping" in joined:
             if self.on_ping:
