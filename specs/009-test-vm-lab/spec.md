@@ -111,6 +111,10 @@ VM.
   skipped, local Administrator password, SSH host keys removed before
   sealing) before R2/R3 can hold.
 - The operator's retail key must not go on test clones.
+- Confirmation (decided 2026-10-21, `AGENTS.md`): actions confined to
+  the four slots and their computer objects in `OU=ai-deploy-test` need
+  no operator confirmation; anything outside - `dc`, Domain Admin,
+  templates, other OUs - keeps the confirmation rules.
 - The brief's principles apply to the tooling: idempotent, verify
   don't assume.
 
@@ -118,11 +122,13 @@ VM.
 - [x] Scope change: carve-out agreed 2026-10-21 and written into
       `BRIEF.md` (sections 2, 3, 6, 7) and `AGENTS.md` (Infrastructure
       access, Tools).
-- [ ] Confirmation rules inside the sandbox: `AGENTS.md` requires
-      confirmation for destructive actions on onboarded VMs and for AD
-      writes. Proposed: none needed for create/reset/remove of the four
-      slots and their computer objects in `OU=ai-deploy-test`;
-      everything outside stays as now. Not yet agreed.
+- [x] Confirmation rules inside the sandbox: agreed 2026-10-21 and
+      written into `AGENTS.md` - no confirmation for actions confined to
+      the four slots and their computer objects in `OU=ai-deploy-test`
+      (join-only account); everything else keeps the confirmation rules.
+      A Claude Code permission rule for the lab tooling's commands may
+      also be needed (auto mode blocked 001's approved AC3 run) -
+      deferred to plan.md, once the commands exist.
 - [ ] Windows product key for test clones: evaluation edition (needs a
       new template from the evaluation ISO) or Microsoft's public KMS
       client key in the answer file on the existing template (to be

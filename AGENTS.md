@@ -207,6 +207,14 @@ Read this at the start of every session. Every rule should trace back to an entr
   onboarding as proven the way Windows now is.
 - Rule: any destructive action on an onboarded VM always requires
   explicit confirmation regardless of mode.
+  - **Exception (decided 2026-10-21, spec 009)**: no confirmation for
+    actions confined to the four test slots (9101-9102, 9201-9202):
+    clone, start, stop, snapshot, reset, deliberate breakage for tests,
+    and removal - and for joining/removing those VMs' computer objects
+    in `OU=ai-deploy-test` via the join-only account. Everything else
+    keeps the confirmation rules - including any AD write outside that
+    OU, anything done as Domain Admin or Key B on `dc`, and any change
+    to the templates.
 
 - Windows AD domain account (for the DC/CA/DNS target's playbooks —
   Create a Certificate, Create/Delete User, Create/Delete Group,
@@ -224,7 +232,10 @@ Read this at the start of every session. Every rule should trace back to an entr
   - Rule: any AD write (create/delete user, group, DNS record,
     certificate) always requires explicit confirmation regardless of
     mode — this credential can do far more than this product's
-    features need, so nothing here should run unattended.
+    features need, so nothing here should run unattended. (The only
+    AD exception is the spec 009 join-only account inside
+    `OU=ai-deploy-test` - see the test-slot exception above. It never
+    applies to this Domain Admin credential.)
 
 ## Workflow
 - Read `BRIEF.md` first. Specs inherit its principles and non-goals.
