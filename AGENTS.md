@@ -15,10 +15,17 @@ Read this at the start of every session. Every rule should trace back to an entr
   `~/.config/ai-deploy/inventory/` (outside the repo). Target prep
   scripts (`utils/`), Ansible and playbooks stay in PowerShell/bash
   per the existing Tools rules.
-- Run tests: `<command>`
-- Checks (static, run at Test stage): `<commands>` - to be decided
-  during spec 001's plan.
-- Run the app: `<command>`
+- Run tests (on `ai-deploy`, in `~/ai-deploy`, after `git pull`):
+  `AI_DEPLOY_TEST_TARGET=192.168.3.1 python3 -m pytest` (unit + live;
+  without the env var only unit tests run). The destructive AC3 test
+  additionally needs `--allow-destructive` and explicit operator
+  confirmation before every run - it changes the target's sshd shell.
+- Checks (static, run at Test stage; decided in spec 001's plan):
+  `ruff check .` and `ruff format --check .` (ruff via pipx, installed
+  by `utils/prereqs/ai-deploy/install-ansible.sh`).
+- Run the app: onboarding CLI (spec 001), on `ai-deploy`:
+  `~/ai-deploy/bin/onboard-windows --name <name> --ip <ip>`. The web UI
+  (spec 000) has no command yet.
 - Control VM (the ai-deploy VM itself, not a target to onboard):
   hostname `ai-deploy`, IP `192.168.3.2` (eth0), Ubuntu 26.04.1 LTS, VM
   on Proxmox provisioned via cloud-init, user `masterchief`. Claude Code

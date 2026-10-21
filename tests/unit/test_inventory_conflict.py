@@ -22,8 +22,16 @@ def test_ac9_conflicting_entry_fails_without_network_or_change(
     runner = StubRunner()
 
     rc = main(
-        ["--name", "win-test", "--ip", "192.168.3.1",
-         "--inventory-dir", str(inventory), "--known-hosts", str(tmp_path / "kh")],
+        [
+            "--name",
+            "win-test",
+            "--ip",
+            "192.168.3.1",
+            "--inventory-dir",
+            str(inventory),
+            "--known-hosts",
+            str(tmp_path / "kh"),
+        ],
         runner=runner,
     )
 

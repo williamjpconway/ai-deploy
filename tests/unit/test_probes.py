@@ -9,8 +9,16 @@ from onboard.cli import main
 def run(tmp_path, runner, capsys):
     inventory = tmp_path / "inventory"
     rc = main(
-        ["--name", "win-test", "--ip", "192.168.3.1",
-         "--inventory-dir", str(inventory), "--known-hosts", str(tmp_path / "kh")],
+        [
+            "--name",
+            "win-test",
+            "--ip",
+            "192.168.3.1",
+            "--inventory-dir",
+            str(inventory),
+            "--known-hosts",
+            str(tmp_path / "kh"),
+        ],
         runner=runner,
     )
     out = capsys.readouterr()
@@ -18,7 +26,7 @@ def run(tmp_path, runner, capsys):
 
 
 def test_ac3_cmd_exe_shell_fails_the_shell_check(tmp_path, capsys):
-    runner = StubRunner(shell=(1, "", CMD_EXE_ERROR))
+    runner = StubRunner(shell_probe=(1, "", CMD_EXE_ERROR))
     rc, output, inventory = run(tmp_path, runner, capsys)
     assert rc != 0
     assert check_tag(output) == "shell"
@@ -27,7 +35,7 @@ def test_ac3_cmd_exe_shell_fails_the_shell_check(tmp_path, capsys):
 
 def test_ac3_powershell_banner_without_marker_fails_the_shell_check(tmp_path, capsys):
     """Exit 0 alone is not proof - the probe output must contain the marker."""
-    runner = StubRunner(shell=(0, "Microsoft Windows [Version 10.0.26100]\r\n", ""))
+    runner = StubRunner(shell_probe=(0, "Microsoft Windows [Version 10.0.26100]\r\n", ""))
     rc, output, _ = run(tmp_path, runner, capsys)
     assert rc != 0
     assert check_tag(output) == "shell"

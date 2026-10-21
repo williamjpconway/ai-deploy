@@ -65,9 +65,7 @@ def cli(inventory_dir, known_hosts):
 def throwaway_key(tmp_path):
     """An ed25519 key no target has ever seen."""
     path = tmp_path / "throwaway"
-    subprocess.run(
-        ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(path)], check=True
-    )
+    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(path)], check=True)
     return path
 
 
@@ -76,12 +74,18 @@ def target_ssh(ip, known_hosts, command):
     return subprocess.run(
         [
             "ssh",
-            "-F", "/dev/null",
-            "-i", str(KEY_B),
-            "-o", "IdentitiesOnly=yes",
-            "-o", "BatchMode=yes",
-            "-o", "StrictHostKeyChecking=accept-new",
-            "-o", f"UserKnownHostsFile={known_hosts}",
+            "-F",
+            "/dev/null",
+            "-i",
+            str(KEY_B),
+            "-o",
+            "IdentitiesOnly=yes",
+            "-o",
+            "BatchMode=yes",
+            "-o",
+            "StrictHostKeyChecking=accept-new",
+            "-o",
+            f"UserKnownHostsFile={known_hosts}",
             f"masterchief@{ip}",
             command,
         ],

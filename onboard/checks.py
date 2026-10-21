@@ -50,16 +50,24 @@ def reachability(runner, ip, port):
 def ssh_argv(ip, port, key, known_hosts, command):
     return [
         "ssh",
-        "-F", "/dev/null",
-        "-p", str(port),
-        "-i", str(key),
-        "-o", "IdentitiesOnly=yes",
-        "-o", "BatchMode=yes",
-        "-o", "ConnectTimeout=10",
+        "-F",
+        "/dev/null",
+        "-p",
+        str(port),
+        "-i",
+        str(key),
+        "-o",
+        "IdentitiesOnly=yes",
+        "-o",
+        "BatchMode=yes",
+        "-o",
+        "ConnectTimeout=10",
         # R9: OpenSSH's own trust-on-first-use. Unknown keys are recorded,
         # changed keys are refused and never replaced.
-        "-o", "StrictHostKeyChecking=accept-new",
-        "-o", f"UserKnownHostsFile={known_hosts}",
+        "-o",
+        "StrictHostKeyChecking=accept-new",
+        "-o",
+        f"UserKnownHostsFile={known_hosts}",
         f"{USER}@{ip}",
         command,
     ]
@@ -118,9 +126,7 @@ def identity(runner, ip, port, key, known_hosts):
     name, _, admin = line[3:].partition("|ADMIN:")
     account = name.rsplit("\\", 1)[-1]
     if account.lower() != USER:
-        raise CheckFailed(
-            "identity", f"session on {ip} is {name or 'unknown'!r}, not {USER}"
-        )
+        raise CheckFailed("identity", f"session on {ip} is {name or 'unknown'!r}, not {USER}")
     if admin != "True":
         raise CheckFailed(
             "identity",

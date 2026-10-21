@@ -141,9 +141,7 @@ def test_ac10_changed_host_key_fails_and_is_not_replaced(
     cli, target_ip, known_hosts, tmp_path, inventory_dir
 ):
     wrong = tmp_path / "wrong_host_key"
-    subprocess.run(
-        ["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(wrong)], check=True
-    )
+    subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(wrong)], check=True)
     known_hosts.write_text(f"{target_ip} {wrong.with_suffix('.pub').read_text().strip()}\n")
     before = known_hosts.read_bytes()
 

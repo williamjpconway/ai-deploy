@@ -34,8 +34,16 @@ def test_ac12_unsafe_name_is_a_usage_failure(tmp_path, capsys):
     """The name becomes a file name - it must never escape the inventory dir."""
     runner = StubRunner()
     rc = main(
-        ["--name", "../evil", "--ip", "192.168.3.1",
-         "--inventory-dir", str(tmp_path / "inventory"), "--known-hosts", str(tmp_path / "kh")],
+        [
+            "--name",
+            "../evil",
+            "--ip",
+            "192.168.3.1",
+            "--inventory-dir",
+            str(tmp_path / "inventory"),
+            "--known-hosts",
+            str(tmp_path / "kh"),
+        ],
         runner=runner,
     )
     out = capsys.readouterr()

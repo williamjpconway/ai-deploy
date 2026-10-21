@@ -22,9 +22,8 @@ def cmd_shell_target(target_ip, tmp_path):
     assert before.returncode == 0 and before.stdout.strip() == POWERSHELL, before
     print(f"DefaultShell before: {before.stdout.strip()}")
 
-    changed = target_ssh(
-        target_ip, kh, f"Set-ItemProperty HKLM:\\SOFTWARE\\OpenSSH -Name DefaultShell -Value '{CMD}'"
-    )
+    set_cmd = f"Set-ItemProperty HKLM:\\SOFTWARE\\OpenSSH -Name DefaultShell -Value '{CMD}'"
+    changed = target_ssh(target_ip, kh, set_cmd)
     assert changed.returncode == 0, changed
     try:
         yield target_ip

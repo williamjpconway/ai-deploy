@@ -24,9 +24,7 @@ class Runner:
     def run(self, argv, timeout, env=None):
         """Run argv (never through a shell). A timeout comes back as returncode 124."""
         try:
-            proc = subprocess.run(
-                argv, capture_output=True, text=True, timeout=timeout, env=env
-            )
+            proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, env=env)
         except subprocess.TimeoutExpired:
             return Result(124, "", f"timed out after {timeout}s")
         return Result(proc.returncode, proc.stdout, proc.stderr)

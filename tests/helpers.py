@@ -23,12 +23,12 @@ class StubRunner:
 
     def __init__(
         self,
-        shell=(0, GOOD_SHELL, ""),
+        shell_probe=(0, GOOD_SHELL, ""),
         identity=(0, GOOD_IDENTITY, ""),
         ansible_rc=0,
         tcp_error=None,
     ):
-        self.shell = shell
+        self.shell_probe = shell_probe
         self.identity = identity
         self.ansible_rc = ansible_rc
         self.tcp_error = tcp_error
@@ -48,7 +48,7 @@ class StubRunner:
         if "S-1-5-32-544" in joined:
             return Result(*self.identity)
         if "PSOK" in joined:
-            return Result(*self.shell)
+            return Result(*self.shell_probe)
         raise AssertionError(f"unexpected command: {argv}")
 
 
