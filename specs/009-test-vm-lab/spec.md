@@ -62,9 +62,11 @@ VM.
   the domain in `OU=ai-deploy-test`, have `masterchief` in its local
   Administrators group, and have its own SSH host keys (not the
   template's) - so spec 001's onboarding passes against it.
-- **R4** A clean Ubuntu slot MUST have a unique hostname and network
-  config (via Proxmox cloud-init) and pass Ubuntu onboarding's checks
-  (spec 007). Ubuntu slots are not joined to AD.
+- **R4** A clean Ubuntu slot MUST have a unique hostname, machine-id and
+  SSH host keys (via Proxmox cloud-init) and be reachable over SSH as
+  `masterchief` with Key B, with passwordless sudo - what Ubuntu
+  onboarding (spec 007) expects, per `AGENTS.md`. Ubuntu slots are not
+  joined to AD.
 - **R5** The system MUST save a clean state per slot and reset a slot to
   it on request, without re-cloning. It MUST NOT destroy a slot;
   rebuilding a slot from scratch is an operator step.
@@ -75,6 +77,16 @@ VM.
   credential on `ai-deploy` only, never in the repo, logs or output.
 - **R8** The system SHOULD show which slots exist and their state
   (empty / clean / in use).
+- **R9** The feature MUST include a skill (`skills/test-vms/`) that tells
+  the agent when and how to use the lab during a feature's
+  Develop/Test stages - take a free slot, reset it to clean, test, and
+  leave it reset - and `skills/build-feature/` and `AGENTS.md` MUST
+  point to it (decided 2026-10-21).
+- **R10** Before changing any slot, the system MUST check its
+  prerequisites - the Proxmox token works, both templates are visible,
+  the join credential isn't the placeholder and authenticates, and the
+  configured join DNS/DC answers - and fail naming the missing one
+  (decided 2026-10-21).
 
 ## 6. Acceptance criteria
 - **AC1** (R1) Given the tooling asks Proxmox to create a VM outside
@@ -85,8 +97,8 @@ VM.
   `OU=ai-deploy-test`, has its own SSH host keys, and spec 001's
   `onboard-windows` passes against it.
 - **AC3** (R2, R4) Given an empty Ubuntu slot, when it's brought up,
-  then it has its own hostname and IP and is reachable over SSH with
-  Key B.
+  then it has its own hostname, machine-id, SSH host key and IP, and
+  `masterchief` can log in with Key B and run `sudo -n true`.
 - **AC4** (R5) Given a slot changed after reaching clean (e.g. SSH shell
   set to `cmd.exe`), when it's reset, then it's back to clean and
   onboarding passes again.
@@ -95,6 +107,13 @@ VM.
   changed.
 - **AC6** (R7) Given any run, then neither secret appears in output,
   logs or the repo.
+- **AC7** (R10) Given the join credential is still the placeholder (or
+  the token, a template or the join DNS is unavailable), when a
+  Windows slot is brought up, then it fails before any clone or slot
+  change, naming the missing prerequisite.
+- **AC8** (R9) Given the feature is done, then `skills/test-vms/SKILL.md`
+  exists, and `skills/build-feature/SKILL.md` and `AGENTS.md` reference
+  it.
 
 ## 7. Constraints
 - Proxmox (decided and set up 2026-10-21, verified read-only): VE 9.2.3,
@@ -115,6 +134,12 @@ VM.
   the first few - Windows runs unactivated, so tests aren't affected.
   `tmpl-ubuntu2604` (9001) sealed with `seal-template.sh`.
 - No limit on how many slots run at once (decided 2026-10-21).
+- No domain controller is fixed in either template (checked 2026-10-21:
+  both get DNS 192.168.0.254 from DHCP; no hosts entries, suffixes or
+  policies naming `dc`). The domain to join and the DC/DNS a clone uses
+  for the join MUST be settings on `ai-deploy` (alongside the join
+  credential), so moving to a different DC is a configuration change,
+  not a template or code change.
 - Confirmation (decided 2026-10-21, `AGENTS.md`): actions confined to
   the 20 slots and their computer objects in `OU=ai-deploy-test` need
   no operator confirmation; anything outside - `dc`, Domain Admin,
@@ -189,10 +214,10 @@ VM.
 
 ---
 ### Ready checklist
-- [ ] Problem and goal make sense to someone without context
-- [ ] Every requirement is testable (no "fast", "easy", "robust" without a number)
-- [ ] Every MUST has at least one acceptance criterion
-- [ ] Non-goals list at least one thing someone might reasonably assume is in scope
-- [ ] No implementation detail (that goes in plan.md)
-- [ ] Doesn't contradict the brief's principles or non-goals
-- [ ] Open questions resolved or deferred
+- [x] Problem and goal make sense to someone without context
+- [x] Every requirement is testable (no "fast", "easy", "robust" without a number)
+- [x] Every MUST has at least one acceptance criterion
+- [x] Non-goals list at least one thing someone might reasonably assume is in scope
+- [x] No implementation detail (that goes in plan.md)
+- [x] Doesn't contradict the brief's principles or non-goals
+- [x] Open questions resolved or deferred
