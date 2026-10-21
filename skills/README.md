@@ -6,6 +6,13 @@ it, the steps, and how to verify the result.
 Skills here are a project convention, not auto-loaded - `AGENTS.md`'s
 Workflow section maps what the operator says to which skill to read.
 
+For Claude Code specifically, each skill also has a thin pointer at
+`.claude/skills/<name>/SKILL.md` (frontmatter + "read and follow the
+real file") so it's discoverable via `/skills` and invocable by name -
+same pattern as `CLAUDE.md` pointing at `AGENTS.md`. The folders here
+stay the single source of truth, readable by any tool, not just
+Claude Code.
+
 ## Standing skills (written up front, not earned)
 
 | Skill | Operator says | Does |
