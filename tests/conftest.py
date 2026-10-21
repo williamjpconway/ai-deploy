@@ -17,6 +17,13 @@ def pytest_addoption(parser):
         action="store_true",
         help="run tests that change the target VM (operator confirms each run)",
     )
+    parser.addoption(
+        "--confirmed-target",
+        action="append",
+        default=[],
+        metavar="IP",
+        help="the operator confirmed this run's destructive tests against IP (a non-slot target)",
+    )
 
 
 def pytest_collection_modifyitems(config, items):

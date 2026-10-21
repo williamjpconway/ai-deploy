@@ -1,12 +1,13 @@
 """AC3 (R3) for real: the test target's SSH shell set to cmd.exe, then restored.
 
-Changes the target VM. Skipped unless --allow-destructive is passed, and per
-AGENTS.md the operator confirms each run before it's started.
+Changes the target VM. Skipped unless --allow-destructive is passed, and
+unless the target is the lab slot (AI_DEPLOY_TEST_LAB_VMID) or the operator
+confirmed this run with --confirmed-target=<ip> (AGENTS.md).
 """
 
 import pytest
 from conftest import target_ssh
-from helpers import check_tag, snapshot
+from helpers import check_tag, require_slot_or_confirmed, snapshot
 
 pytestmark = [pytest.mark.live, pytest.mark.destructive]
 
@@ -16,7 +17,8 @@ READ_SHELL = "(Get-ItemProperty HKLM:\\SOFTWARE\\OpenSSH -Name DefaultShell).Def
 
 
 @pytest.fixture
-def cmd_shell_target(target_ip, tmp_path):
+def cmd_shell_target(request, target_ip, tmp_path):
+    require_slot_or_confirmed(request.config, target_ip)
     kh = tmp_path / "admin_known_hosts"
     before = target_ssh(target_ip, kh, READ_SHELL)
     assert before.returncode == 0 and before.stdout.strip() == POWERSHELL, before

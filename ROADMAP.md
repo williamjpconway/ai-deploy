@@ -10,7 +10,7 @@
 | 004 | Create/Delete User | Plan | [specs/004-create-delete-user](specs/004-create-delete-user/spec.md) |
 | 005 | Create/Delete Group | Plan | [specs/005-create-delete-group](specs/005-create-delete-group/spec.md) |
 | 006 | Create a Certificate | Plan | [specs/006-create-a-certificate](specs/006-create-a-certificate/spec.md) |
-| 007 | Onboard an Ubuntu VM | Develop | [specs/007-onboard-an-ubuntu-vm](specs/007-onboard-an-ubuntu-vm/spec.md) |
+| 007 | Onboard an Ubuntu VM | Test | [specs/007-onboard-an-ubuntu-vm](specs/007-onboard-an-ubuntu-vm/spec.md) |
 | 008 | Terminal access to onboarded VMs | Plan | [specs/008-terminal-access-to-onboarded-vms](specs/008-terminal-access-to-onboarded-vms/spec.md) |
 
 Rows are in build order; # is a stable ID, not the order.

@@ -1,8 +1,8 @@
 # Status 007: Onboard an Ubuntu VM
 
-**Stage:** Develop
+**Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** Test run 3 not clean (stop condition) - operator decides: T14 then run 4, or accept with T14 open - waiting on operator
+**Next:** Test run 4 (operator-requested after run 3 stop) - agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->

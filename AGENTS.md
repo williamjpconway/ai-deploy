@@ -18,10 +18,12 @@ Read this at the start of every session. Every rule should trace back to an entr
 - Run tests (on `ai-deploy`, in `~/ai-deploy`, after `git pull`):
   `AI_DEPLOY_TEST_TARGET=192.168.3.1 AI_DEPLOY_TEST_TARGET_UBUNTU=<ubuntu ip> python3 -m pytest`
   (unit + live; each live suite runs only when its variable is set).
-  Destructive tests also need `--allow-destructive` - against `dc` (001's
-  AC3) the operator confirms every run; against a spec 009 slot no
-  confirmation is needed. 007's AC6 additionally needs
-  `AI_DEPLOY_TEST_LAB_VMID=<slot vmid>` (optional, restores by snapshot).
+  Destructive tests also need `--allow-destructive`, and only change a
+  target that is the spec 009 slot named by
+  `AI_DEPLOY_TEST_LAB_VMID=<slot vmid>` (matched by IP, no confirmation
+  needed) or one the operator confirmed for this run with
+  `--confirmed-target=<ip>` (e.g. `dc`, 001's AC3) - anything else is
+  skipped unchanged. 007's AC6 needs the slot (restores by snapshot).
 - Checks (static, run at Test stage; decided in spec 001's plan):
   `ruff check .` and `ruff format --check .` (ruff via pipx, installed
   by `utils/prereqs/ai-deploy/install-ansible.sh`).

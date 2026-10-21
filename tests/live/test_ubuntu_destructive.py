@@ -7,7 +7,8 @@ AC6: sudo broken for real - which also breaks any sudo-based restore - so it
      restored by Proxmox snapshot rollback. Optional: skipped without the lab.
 
 Both need --allow-destructive. Against a 009 slot no operator confirmation is
-needed (AGENTS.md sandbox exception); against anything else it is.
+needed (AGENTS.md sandbox exception); against anything else AC3 is skipped
+unless the operator names it with --confirmed-target=<ip>.
 """
 
 import os
@@ -15,14 +16,15 @@ import time
 
 import pytest
 from conftest import ubuntu_ssh
-from helpers import check_tag, snapshot
+from helpers import check_tag, require_slot_or_confirmed, snapshot
 
 DROPIN = "/etc/ssh/sshd_config.d/00-a-test-password.conf"
 RESTART = "sudo systemctl restart ssh.socket ssh.service"
 
 
 @pytest.fixture
-def password_auth_on(ubuntu_ip, tmp_path):
+def password_auth_on(request, ubuntu_ip, tmp_path):
+    require_slot_or_confirmed(request.config, ubuntu_ip)
     kh = tmp_path / "admin_known_hosts"
     try:
         # Inside the try: if the restart fails after the drop-in is written,

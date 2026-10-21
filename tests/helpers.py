@@ -1,7 +1,9 @@
 """Shared test helpers: a stub Runner and a directory snapshot."""
 
+import os
 from pathlib import Path
 
+import pytest
 import yaml
 
 from onboard.runner import Result
@@ -143,3 +145,21 @@ def write_ubuntu_host(inventory_dir, name, ip, key="~/.ssh/ai_deploy_targets"):
         }
     }
     (inventory_dir / f"{name}.yml").write_text(yaml.safe_dump(data, sort_keys=False))
+
+
+def require_slot_or_confirmed(config, ip):
+    """Skip unless ip is the lab slot (AI_DEPLOY_TEST_LAB_VMID) or named with
+    --confirmed-target. Destructive fixtures call this before changing anything:
+    slots need no confirmation, everything else does (AGENTS.md)."""
+    vmid = os.environ.get("AI_DEPLOY_TEST_LAB_VMID")
+    slot_ip = None
+    if vmid:
+        from testlab import proxmox
+
+        slot_ip = proxmox.ipv4(vmid)
+        if slot_ip == ip:
+            return
+    if ip in config.getoption("--confirmed-target"):
+        return
+    where = f"slot {vmid} is at {slot_ip}, not {ip}; " if vmid else ""
+    pytest.skip(f"{ip} is not a test slot - {where}needs --confirmed-target={ip} (nothing changed)")
