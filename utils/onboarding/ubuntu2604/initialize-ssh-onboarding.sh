@@ -18,6 +18,10 @@
 #   needed, and 50-cloud-init.conf itself should also be flipped.
 # - Ubuntu's SSH is socket-activated - a config change needs both
 #   ssh.socket and ssh.service restarted, not just the service.
+# - OpenSSH 9.8+ (Ubuntu 26.04 ships 10.2) blocks a client for a while after
+#   repeated failed or abandoned logins (PerSourcePenalties). ai-deploy - the
+#   management host, which already holds Key B - is exempted so a few failed
+#   onboarding runs or tests can't lock it out (found 2026-10-21, spec 007).
 #
 # Idempotent: each step checks current state first and skips if
 # already correct. Supports --dry-run.
@@ -30,11 +34,14 @@ TARGET_USER="masterchief"
 # with --public-key= if Key B is ever regenerated or a different key
 # is needed.
 PUBLIC_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIFGRR8D4t1P0Y7OzU79Ch94x0e/VtC3lOXZINJfzpYRh ai-deploy target key"
+# ai-deploy's address: exempt from sshd's PerSourcePenalties lockout.
+EXEMPT_IP="192.168.3.2"
 DRY_RUN=0
 
 for arg in "$@"; do
   case "$arg" in
     --dry-run) DRY_RUN=1 ;;
+    --exempt-ip=*) EXEMPT_IP="${arg#--exempt-ip=}" ;;
     --public-key=*) PUBLIC_KEY="${arg#--public-key=}" ;;
     --user=*) TARGET_USER="${arg#--user=}" ;;
   esac
@@ -118,6 +125,19 @@ if [[ -f "$CLOUD_INIT_CONF" ]] && grep -q "PasswordAuthentication yes" "$CLOUD_I
   fi
 fi
 
+EXEMPT_LINE="PerSourcePenaltyExemptList $EXEMPT_IP"
+if [[ -f "$KEYS_ONLY_CONF" ]] && grep -qxF "$EXEMPT_LINE" "$KEYS_ONLY_CONF" 2>/dev/null; then
+  echo "ai-deploy ($EXEMPT_IP) already exempt from sshd login penalties, skipping"
+else
+  if [[ "$DRY_RUN" -eq 1 ]]; then
+    echo "[dry-run] would add '$EXEMPT_LINE' to $KEYS_ONLY_CONF"
+  else
+    echo "$EXEMPT_LINE" >> "$KEYS_ONLY_CONF"
+    echo "Exempted ai-deploy ($EXEMPT_IP) from sshd login penalties in $KEYS_ONLY_CONF"
+    NEEDS_RESTART=1
+  fi
+fi
+
 if [[ "$NEEDS_RESTART" -eq 1 ]]; then
   run sshd -t
   run systemctl restart ssh.socket
@@ -137,7 +157,7 @@ else
 fi
 
 if [[ "$DRY_RUN" -eq 1 ]]; then
-  echo "[dry-run] would verify: sshd running, PasswordAuthentication no, authorized_keys correct"
+  echo "[dry-run] would verify: sshd running, PasswordAuthentication no, authorized_keys correct, $EXEMPT_IP exempt"
   exit 0
 fi
 
@@ -158,6 +178,13 @@ if [[ -f "$AUTH_KEYS" ]] && grep -qxF "$PUBLIC_KEY" "$AUTH_KEYS"; then
   echo "authorized_keys: present and contains the expected key"
 else
   echo "FAILED: authorized_keys missing or does not contain the expected key"
+  exit 1
+fi
+
+if echo "$effective_config" | grep -qi "^persourcepenaltyexemptlist .*$EXEMPT_IP"; then
+  echo "PerSourcePenaltyExemptList: includes $EXEMPT_IP"
+else
+  echo "FAILED: sshd -T doesn't show $EXEMPT_IP in PerSourcePenaltyExemptList"
   exit 1
 fi
 
