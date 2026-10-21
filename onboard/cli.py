@@ -26,6 +26,9 @@ EXIT_CODES = {
     "ansible": 9,
     "ssh": 10,
     "busy": 11,
+    "prereq": 12,
+    "key": 13,
+    "inventory": 14,
 }
 
 
@@ -60,6 +63,8 @@ def parse(argv):
         ipaddress.ip_address(args.ip)
     except ValueError:
         raise CheckFailed("usage", f"--ip {args.ip!r} is not an IP address") from None
+    if not 1 <= args.port <= 65535:
+        raise CheckFailed("usage", f"--port {args.port} is outside 1-65535")
     return args
 
 
@@ -74,7 +79,14 @@ def onboard(args, runner):
 
 
 def _onboard(args, runner):
-    hosts = inventory.load_hosts(args.inventory_dir)
+    try:
+        hosts = inventory.load_hosts(args.inventory_dir)
+    except inventory.Unreadable as e:
+        raise CheckFailed(
+            "inventory",
+            f"can't read inventory file {e.path} ({e.reason}) - fix or move it; "
+            "nothing was changed",
+        ) from None
     state, conflict = inventory.find(hosts, args.name, args.ip)
     if state == "new" and (taken := inventory.file_taken(args.inventory_dir, args.name)):
         conflict = f"{taken} already exists but doesn't hold '{args.name}' ({args.ip})"
@@ -82,6 +94,7 @@ def _onboard(args, runner):
     if state == "conflict":
         raise CheckFailed("inventory-conflict", f"{conflict} - inventory left unchanged")
 
+    checks.key_file(args.key)
     target = (runner, args.ip, args.port, args.key, args.known_hosts)
     checks.reachability(runner, args.ip, args.port)
     checks.shell(*target)

@@ -7,6 +7,8 @@ import socket
 import subprocess
 from dataclasses import dataclass
 
+from onboard.checks import CheckFailed
+
 
 @dataclass
 class Result:
@@ -26,6 +28,12 @@ class Runner:
         """Run argv (never through a shell). A timeout comes back as returncode 124."""
         try:
             proc = subprocess.run(argv, capture_output=True, text=True, timeout=timeout, env=env)
+        except FileNotFoundError:
+            raise CheckFailed(
+                "prereq",
+                f"{argv[0]} isn't installed on ai-deploy (or isn't on PATH) - install it "
+                "(utils/prereqs/ai-deploy/install-ansible.sh for ansible)",
+            ) from None
         except subprocess.TimeoutExpired:
             return Result(124, "", f"timed out after {timeout}s", timed_out=True)
         return Result(proc.returncode, proc.stdout, proc.stderr)

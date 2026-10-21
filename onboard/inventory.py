@@ -19,11 +19,25 @@ def load_hosts(inventory_dir):
     if not root.is_dir():
         return hosts
     for path in sorted(root.glob("*.yml")) + sorted(root.glob("*.yaml")):
-        data = yaml.safe_load(path.read_text()) or {}
+        try:
+            data = yaml.safe_load(path.read_text()) or {}
+        except (OSError, yaml.YAMLError) as e:
+            raise Unreadable(path, str(e).splitlines()[0]) from None
+        if not isinstance(data, dict):
+            raise Unreadable(path, f"top level is a {type(data).__name__}, not a mapping")
         for group in data.values():
-            for name, hostvars in ((group or {}).get("hosts") or {}).items():
-                hosts[name] = (hostvars or {}).get("ansible_host", name)
+            group_hosts = group.get("hosts") if isinstance(group, dict) else None
+            for name, hostvars in (group_hosts or {}).items():
+                ip = hostvars.get("ansible_host", name) if isinstance(hostvars, dict) else name
+                hosts[name] = ip
     return hosts
+
+
+class Unreadable(Exception):
+    def __init__(self, path, reason):
+        super().__init__(f"{path}: {reason}")
+        self.path = path
+        self.reason = reason
 
 
 def find(hosts, name, ip):

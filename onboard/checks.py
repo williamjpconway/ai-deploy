@@ -1,7 +1,9 @@
 """The checks onboarding runs against a target, in order. Each raises CheckFailed."""
 
 import os
+import shlex
 import shutil
+import stat
 from pathlib import Path
 
 USER = "masterchief"
@@ -23,6 +25,24 @@ class CheckFailed(Exception):
         super().__init__(message)
         self.check = check
         self.message = message
+
+
+def key_file(path):
+    """Key B is usable on ai-deploy, before blaming the target for a rejection."""
+    if not path.is_file():
+        raise CheckFailed(
+            "key",
+            f"key {path} does not exist on ai-deploy - generate it with "
+            "utils/prereqs/ai-deploy/new-target-key.sh, then install its .pub on the target",
+        )
+    if not os.access(path, os.R_OK):
+        raise CheckFailed("key", f"key {path} isn't readable by this user on ai-deploy")
+    if stat.S_IMODE(path.stat().st_mode) & 0o077:
+        raise CheckFailed(
+            "key",
+            f"key {path} is readable by other users, so ssh will refuse to use it - "
+            f"fix with: chmod 600 {path}",
+        )
 
 
 def reachability(runner, ip, port):
@@ -47,6 +67,16 @@ def reachability(runner, ip, port):
         ) from None
 
 
+def known_host_name(ip, port):
+    """How known_hosts names this target: bare IP on 22, '[ip]:port' otherwise."""
+    return ip if port == 22 else f"'[{ip}]:{port}'"
+
+
+def known_hosts_option(known_hosts):
+    # ssh splits UserKnownHostsFile on whitespace unless the value is quoted.
+    return f'UserKnownHostsFile="{known_hosts}"'
+
+
 def ssh_argv(ip, port, key, known_hosts, command):
     return [
         "ssh",
@@ -67,7 +97,7 @@ def ssh_argv(ip, port, key, known_hosts, command):
         "-o",
         "StrictHostKeyChecking=accept-new",
         "-o",
-        f"UserKnownHostsFile={known_hosts}",
+        known_hosts_option(known_hosts),
         f"{USER}@{ip}",
         command,
     ]
@@ -91,7 +121,7 @@ def ssh(runner, ip, port, key, known_hosts, command):
                 "host-key",
                 f"{ip} presented a different SSH host key from the one recorded in "
                 f"{known_hosts}. If the VM was rebuilt or the IP reused, clear the old key "
-                f"with: ssh-keygen -R {ip} -f {known_hosts}",
+                f"with: ssh-keygen -R {known_host_name(ip, port)} -f {known_hosts}",
             )
         if "Permission denied" in err:
             raise CheckFailed(
@@ -156,7 +186,8 @@ def ansible_ping(runner, inventory, name, known_hosts):
     """R6: Ansible itself reaches the target through the given inventory."""
     env = dict(
         os.environ,
-        ANSIBLE_SSH_COMMON_ARGS=f"-o UserKnownHostsFile={known_hosts}",
+        # Ansible shlex-splits this, then ssh parses the quoted value itself.
+        ANSIBLE_SSH_COMMON_ARGS="-o " + shlex.quote(known_hosts_option(known_hosts)),
         ANSIBLE_HOST_KEY_CHECKING="True",
     )
     result = runner.run(
