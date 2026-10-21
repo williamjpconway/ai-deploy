@@ -1,4 +1,7 @@
-"""The checks onboarding runs against a target, in order. Each raises CheckFailed."""
+"""Checks shared by every OS profile. Each raises CheckFailed.
+
+OS-specific probes live in onboard/windows.py and onboard/ubuntu.py.
+"""
 
 import os
 import shlex
@@ -7,17 +10,9 @@ import stat
 from pathlib import Path
 
 USER = "masterchief"
-ADMINISTRATORS_SID = "S-1-5-32-544"
 TCP_TIMEOUT = 5
 SSH_TIMEOUT = 60
 ANSIBLE_TIMEOUT = 120
-
-SHELL_PROBE = "Write-Output ('PSOK:' + $PSVersionTable.PSVersion.Major)"
-IDENTITY_PROBE = (
-    "$i = [Security.Principal.WindowsIdentity]::GetCurrent(); "
-    "$admin = [bool]($i.Groups | Where-Object { $_.Value -eq '" + ADMINISTRATORS_SID + "' }); "
-    "Write-Output ('ID:' + $i.Name + '|ADMIN:' + $admin)"
-)
 
 
 class CheckFailed(Exception):
@@ -103,8 +98,11 @@ def ssh_argv(ip, port, key, known_hosts, command):
     ]
 
 
-def ssh(runner, ip, port, key, known_hosts, command):
-    """Run one command over SSH, turning host-key and auth refusals into R9/R2 failures."""
+def ssh(runner, ip, port, key, known_hosts, command, auth_message):
+    """Run one command over SSH, turning host-key and auth refusals into R9/R2 failures.
+
+    auth_message(ip, key) is the OS profile's explanation of a rejected key.
+    """
     result = runner.run(ssh_argv(ip, port, key, known_hosts, command), timeout=SSH_TIMEOUT)
     if result.timed_out:
         # TCP already answered (R1), so this is a stalled session, not a shell problem.
@@ -124,55 +122,9 @@ def ssh(runner, ip, port, key, known_hosts, command):
                 f"with: ssh-keygen -R {known_host_name(ip, port)} -f {known_hosts}",
             )
         if "Permission denied" in err:
-            raise CheckFailed(
-                "authentication",
-                f"{ip} rejected key {key} for {USER}. sshd can't tell these apart, so "
-                "check both on the target:\n"
-                f"  1. {USER} must be in the Administrators group (sshd only reads "
-                "administrators_authorized_keys for its members). Add it with:\n"
-                f"       domain controller: Add-ADGroupMember -Identity S-1-5-32-544 "
-                f"-Members {USER}\n"
-                f"       other servers:     Add-LocalGroupMember -SID S-1-5-32-544 "
-                f"-Member {USER}\n"
-                f"  2. The public half of the key ({key}.pub) must be in "
-                "C:\\ProgramData\\ssh\\administrators_authorized_keys - re-run "
-                "utils/onboarding/windows2025/Initialize-SshOnboarding.ps1 to install it.",
-            )
+            raise CheckFailed("authentication", auth_message(ip, key))
         raise CheckFailed("ssh", f"SSH to {ip} failed: {err.strip() or 'no error output'}")
     return result
-
-
-def shell(runner, ip, port, key, known_hosts):
-    """R2 + R3: authenticate, and prove the remote shell is PowerShell by its output."""
-    result = ssh(runner, ip, port, key, known_hosts, SHELL_PROBE)
-    for line in result.stdout.splitlines():
-        line = line.strip()
-        if line.startswith("PSOK:") and line[5:].isdigit():
-            return
-    raise CheckFailed(
-        "shell",
-        f"{ip}'s SSH shell is not PowerShell (probe output: "
-        f"{(result.stdout + result.stderr).strip()[:200]!r}). Windows OpenSSH defaults to "
-        "cmd.exe until HKLM:\\SOFTWARE\\OpenSSH DefaultShell is set to powershell.exe.",
-    )
-
-
-def identity(runner, ip, port, key, known_hosts):
-    """R8: the session is masterchief and a member of Administrators."""
-    result = ssh(runner, ip, port, key, known_hosts, IDENTITY_PROBE)
-    line = next((x.strip() for x in result.stdout.splitlines() if x.startswith("ID:")), "")
-    name, _, admin = line[3:].partition("|ADMIN:")
-    account = name.rsplit("\\", 1)[-1]
-    if account.lower() != USER:
-        raise CheckFailed("identity", f"session on {ip} is {name or 'unknown'!r}, not {USER}")
-    if admin != "True":
-        raise CheckFailed(
-            "identity",
-            f"session on {ip} is {name} but it isn't a member of Administrators "
-            f"({ADMINISTRATORS_SID}). Add it with: Add-ADGroupMember -Identity "
-            f"{ADMINISTRATORS_SID} -Members {USER} (domain controller) or "
-            f"Add-LocalGroupMember -SID {ADMINISTRATORS_SID} -Member {USER} (other servers)",
-        )
 
 
 def ansible_bin():
@@ -182,7 +134,7 @@ def ansible_bin():
     return shutil.which("ansible") or str(Path.home() / ".local" / "bin" / "ansible")
 
 
-def ansible_ping(runner, inventory, name, known_hosts):
+def ansible_ping(runner, inventory, name, known_hosts, module):
     """R6: Ansible itself reaches the target through the given inventory."""
     env = dict(
         os.environ,
@@ -191,7 +143,7 @@ def ansible_ping(runner, inventory, name, known_hosts):
         ANSIBLE_HOST_KEY_CHECKING="True",
     )
     result = runner.run(
-        [ansible_bin(), "-i", str(inventory), name, "-m", "ansible.windows.win_ping"],
+        [ansible_bin(), "-i", str(inventory), name, "-m", module],
         timeout=ANSIBLE_TIMEOUT,
         env=env,
     )
@@ -200,5 +152,5 @@ def ansible_ping(runner, inventory, name, known_hosts):
         raise CheckFailed(
             "ansible",
             f"Ansible could not reach {name} through its inventory entry "
-            f"(win_ping exit {result.returncode}): {detail}",
+            f"({module.rsplit('.', 1)[-1]} exit {result.returncode}): {detail}",
         )

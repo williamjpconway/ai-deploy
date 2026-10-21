@@ -68,7 +68,9 @@ def test_ac11_unknown_host_key_is_recorded(ubuntu_cli, ubuntu_ip, known_hosts):
     assert not known_hosts.exists()
     proc = ubuntu_cli("--name", NAME, "--ip", ubuntu_ip)
     assert proc.returncode == 0, proc.output
-    found = subprocess.run(["ssh-keygen", "-F", ubuntu_ip, "-f", str(known_hosts)], capture_output=True)
+    found = subprocess.run(
+        ["ssh-keygen", "-F", ubuntu_ip, "-f", str(known_hosts)], capture_output=True
+    )
     assert found.returncode == 0
 
 

@@ -1,4 +1,4 @@
-"""onboard-windows: add a Windows VM to Ansible inventory as a verified target."""
+"""onboard-windows / onboard-ubuntu: add a VM to Ansible inventory as a verified target."""
 
 import argparse
 import ipaddress
@@ -8,6 +8,7 @@ from pathlib import Path
 
 from onboard import checks, inventory
 from onboard.checks import CheckFailed
+from onboard.profiles import WINDOWS
 from onboard.runner import Runner
 
 DEFAULT_INVENTORY = Path.home() / ".config" / "ai-deploy" / "inventory"
@@ -37,8 +38,8 @@ class _Parser(argparse.ArgumentParser):
         raise CheckFailed("usage", message)
 
 
-def parse(argv):
-    p = _Parser(prog="onboard-windows", description=__doc__)
+def parse(argv, prog):
+    p = _Parser(prog=prog, description=__doc__)
     p.add_argument("--name", help="inventory name for the target, e.g. dc")
     p.add_argument("--ip", help="the target's IP address")
     p.add_argument("--inventory-dir", type=Path, default=DEFAULT_INVENTORY)
@@ -51,7 +52,7 @@ def parse(argv):
     if missing:
         raise CheckFailed(
             "usage",
-            f"missing {' and '.join(missing)}. Usage: onboard-windows --name <name> --ip <ip>",
+            f"missing {' and '.join(missing)}. Usage: {prog} --name <name> --ip <ip>",
         )
     if not NAME_PATTERN.match(args.name):
         raise CheckFailed(
@@ -68,17 +69,17 @@ def parse(argv):
     return args
 
 
-def onboard(args, runner):
+def onboard(args, runner, profile):
     try:
         with inventory.locked(args.inventory_dir):
-            return _onboard(args, runner)
+            return _onboard(args, runner, profile)
     except inventory.Busy as e:
         raise CheckFailed(
-            "busy", f"another onboard-windows run holds {e} - try again when it finishes"
+            "busy", f"another onboarding run holds {e} - try again when it finishes"
         ) from None
 
 
-def _onboard(args, runner):
+def _onboard(args, runner, profile):
     try:
         hosts = inventory.load_hosts(args.inventory_dir)
     except inventory.Unreadable as e:
@@ -97,16 +98,19 @@ def _onboard(args, runner):
     checks.key_file(args.key)
     target = (runner, args.ip, args.port, args.key, args.known_hosts)
     checks.reachability(runner, args.ip, args.port)
-    checks.shell(*target)
-    checks.identity(*target)
+    for os_check in profile.os_checks:
+        os_check(*target)
 
+    ping = (args.name, args.known_hosts, profile.ping_module)
     if state == "existing":
-        checks.ansible_ping(runner, args.inventory_dir, args.name, args.known_hosts)
+        checks.ansible_ping(runner, args.inventory_dir, *ping)
         return f"already onboarded {args.name} ({args.ip})"
 
-    staged = inventory.Staged(args.inventory_dir, args.name, args.ip, args.key)
+    staged = inventory.Staged(
+        args.inventory_dir, args.name, args.ip, args.key, profile.group, profile.host_vars
+    )
     try:
-        checks.ansible_ping(runner, staged.dir, args.name, args.known_hosts)
+        checks.ansible_ping(runner, staged.dir, *ping)
         staged.commit()
     except inventory.Clobber as e:
         raise CheckFailed(
@@ -118,10 +122,11 @@ def _onboard(args, runner):
 
 
 def main(argv=None, runner=None, profile=None):
+    profile = profile or WINDOWS
     try:
-        args = parse(sys.argv[1:] if argv is None else argv)
-        print(onboard(args, runner or Runner()))
+        args = parse(sys.argv[1:] if argv is None else argv, profile.prog)
+        print(onboard(args, runner or Runner(), profile))
         return 0
     except CheckFailed as e:
-        print(f"onboard-windows: FAILED [{e.check}] {e.message}", file=sys.stderr)
+        print(f"{profile.prog}: FAILED [{e.check}] {e.message}", file=sys.stderr)
         return EXIT_CODES[e.check]

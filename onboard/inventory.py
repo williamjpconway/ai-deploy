@@ -9,8 +9,6 @@ from pathlib import Path
 
 import yaml
 
-GROUP = "windows"
-
 
 def load_hosts(inventory_dir):
     """Every host in the inventory dir, as {name: ansible_host}."""
@@ -82,21 +80,15 @@ class Clobber(Exception):
     pass
 
 
-def host_file(name, ip, key):
-    data = {
-        GROUP: {
-            "hosts": {
-                name: {
-                    "ansible_host": ip,
-                    "ansible_connection": "ssh",
-                    "ansible_user": "masterchief",
-                    "ansible_shell_type": "powershell",
-                    "ansible_ssh_private_key_file": str(key),
-                }
-            }
-        }
+def host_file(name, ip, key, group, host_vars):
+    hostvars = {
+        "ansible_host": ip,
+        "ansible_connection": "ssh",
+        "ansible_user": "masterchief",
+        **host_vars,
+        "ansible_ssh_private_key_file": str(key),
     }
-    return yaml.safe_dump(data, sort_keys=False)
+    return yaml.safe_dump({group: {"hosts": {name: hostvars}}}, sort_keys=False)
 
 
 class Staged:
@@ -107,14 +99,14 @@ class Staged:
     deletes the staging dir. Until commit() the real inventory is never written.
     """
 
-    def __init__(self, inventory_dir, name, ip, key):
+    def __init__(self, inventory_dir, name, ip, key, group, host_vars):
         self.inventory_dir = Path(inventory_dir)
         self.name = name
         parent = self.inventory_dir.parent
         parent.mkdir(parents=True, exist_ok=True)
         self.dir = Path(tempfile.mkdtemp(prefix=".onboard-", dir=parent))
         self.file = self.dir / f"{name}.yml"
-        self.file.write_text(host_file(name, ip, key))
+        self.file.write_text(host_file(name, ip, key, group, host_vars))
 
     def commit(self):
         """Link the file into place. Never overwrites: raises Clobber if it exists."""

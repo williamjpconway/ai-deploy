@@ -42,7 +42,13 @@ def run(tmp_path, runner, capsys, *extra, name=NAME, ip=IP):
 def test_ac12_missing_input_names_onboard_ubuntu_usage(args, missing, tmp_path, capsys):
     runner = UbuntuStubRunner()
     rc = main(
-        [*args, "--inventory-dir", str(tmp_path / "inventory"), "--known-hosts", str(tmp_path / "kh")],
+        [
+            *args,
+            "--inventory-dir",
+            str(tmp_path / "inventory"),
+            "--known-hosts",
+            str(tmp_path / "kh"),
+        ],
         runner=runner,
         profile=UBUNTU,
     )
