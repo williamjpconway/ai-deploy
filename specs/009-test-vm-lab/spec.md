@@ -13,7 +13,7 @@ live tests hit it. Specs 007 (Ubuntu) and 003-006 need real, breakable
 Windows and Ubuntu targets too.
 
 ## 2. Goal
-The agent can, without the operator, bring up to two Windows and two
+The agent can, without the operator, bring up to ten Windows and ten
 Ubuntu test VMs from the existing Proxmox templates into a known clean,
 onboardable state, reset them to that state, and never touch any other
 VM.
@@ -25,7 +25,7 @@ VM.
   product tests take any target IP (decided 2026-10-21).
 - No UI for the lab: the web UI (specs 000/002) doesn't show or manage
   test VMs. That would be a new roadmap item.
-- No VMs beyond the four fixed slots, and no access to any other VM
+- No VMs beyond the 20 fixed slots, and no access to any other VM
   (including `dc` and `ai-deploy`).
 - Does not build or re-seal the templates. Re-sealing
   `tmpl-windows2025` with an answer file is a one-off operator prep
@@ -43,16 +43,16 @@ VM.
 - As the agent, I want a fresh Windows clone to come up already renamed,
   joined to the domain and onboardable by spec 001's checks, with no
   console interaction.
-- As the operator, I want a hard cap of 2 Windows + 2 Ubuntu test VMs
+- As the operator, I want a hard cap of 10 Windows + 10 Ubuntu test VMs
   that holds even if the agent's tooling has a bug.
 - Unhappy path: if a clone doesn't get an IP, can't be joined, or a
-  third Windows VM is requested, the agent gets a specific failure and
+  slot outside the 20 is requested, the agent gets a specific failure and
   nothing outside the slots is affected.
 
 ## 5. Requirements
 - **R1** The system MUST only create, change, reset or remove VMs in
-  four fixed slots: two for Windows (VMIDs 9101, 9102) and two for
-  Ubuntu (9201, 9202), cloned from `tmpl-windows2025` (9000) and
+  20 fixed slots: ten for Windows (VMIDs 9101-9110) and ten for
+  Ubuntu (9201-9210) (widened from 2 + 2 on 2026-10-21), cloned from `tmpl-windows2025` (9000) and
   `tmpl-ubuntu2604` (9001). The cap MUST be enforced by Proxmox
   permissions, not only by the tooling (already in place: see section 7).
 - **R2** The system MUST bring a slot from empty to a clean state with
@@ -78,7 +78,7 @@ VM.
 
 ## 6. Acceptance criteria
 - **AC1** (R1) Given the tooling asks Proxmox to create a VM outside
-  9101-9202 (or a third Windows VM), when it runs, then Proxmox refuses
+  9101-9110 / 9201-9210, when it runs, then Proxmox refuses
   it and the tooling reports which slot limit was hit.
 - **AC2** (R2, R3) Given an empty Windows slot, when it's brought up,
   then within 20 minutes it's renamed, domain-joined in
@@ -100,22 +100,23 @@ VM.
 - Proxmox (decided and set up 2026-10-21, verified read-only): VE 9.2.3,
   node `pve` at 192.168.0.199. API user `ai-deploy-test@pve` (no
   password), token `lab` (`--privsep 0`), stored in
-  `~/.config/ai-deploy/proxmox.env` on `ai-deploy` (mode to be 0600).
+  `~/.config/ai-deploy/proxmox.env` on `ai-deploy` (mode 0600).
   Permissions only on: templates 9000/9001 (`VM.Audit`, `VM.Clone`);
-  slots 9101/9102/9201/9202 (allocate, config, power, snapshot,
+  slots 9101-9110 and 9201-9210 (allocate, CD-ROM for cloud-init, config, power, snapshot,
   rollback, guest-agent audit); storage `local` and `local-lvm`; bridge
   `vmbr0`. The token gets 403 on any other VM.
 - Templates: QEMU guest agent installed; DHCP available on `vmbr0`.
-- `tmpl-windows2025` is currently sealed without an answer file, so each
-  clone stops at the setup screens asking for a product key. It will be
-  rebuilt as VMID 9000 from the Windows Server 2025 evaluation ISO and
-  sealed with an answer file (no key; setup screens skipped; local
-  Administrator password; SSH prep from `Initialize-SshOnboarding.ps1`;
-  SSH host keys removed before sealing) before R2/R3 can hold
-  (decided 2026-10-21). The operator does the build and seal.
-- The operator's retail key must not go on test clones.
+- Templates (re-sealed 2026-10-21, see the spike results below):
+  `tmpl-windows2025` (9000) is full retail Windows Server 2025 Standard
+  with the operator's key in its answer file - like-for-like with real
+  servers (decided 2026-10-21, replacing the earlier evaluation-edition
+  plan). `SetupComplete.cmd` deletes the answer file from every clone.
+  Known limit: one retail key on many clones may stop activating after
+  the first few - Windows runs unactivated, so tests aren't affected.
+  `tmpl-ubuntu2604` (9001) sealed with `seal-template.sh`.
+- No limit on how many slots run at once (decided 2026-10-21).
 - Confirmation (decided 2026-10-21, `AGENTS.md`): actions confined to
-  the four slots and their computer objects in `OU=ai-deploy-test` need
+  the 20 slots and their computer objects in `OU=ai-deploy-test` need
   no operator confirmation; anything outside - `dc`, Domain Admin,
   templates, other OUs - keeps the confirmation rules.
 - The brief's principles apply to the tooling: idempotent, verify
@@ -148,7 +149,7 @@ VM.
       access, Tools).
 - [x] Confirmation rules inside the sandbox: agreed 2026-10-21 and
       written into `AGENTS.md` - no confirmation for actions confined to
-      the four slots and their computer objects in `OU=ai-deploy-test`
+      the slots and their computer objects in `OU=ai-deploy-test`
       (join-only account); everything else keeps the confirmation rules.
       A Claude Code permission rule for the lab tooling's commands may
       also be needed (auto mode blocked 001's approved AC3 run) -
@@ -175,12 +176,12 @@ VM.
       Rebuilding a slot from scratch (destroy + re-clone) is an operator
       step, since destroying a VM very likely removes its slot
       permission - the operator re-adds it.
-- [x] IPs: DHCP reservations (decided 2026-10-21) - 9101
-      192.168.3.201 / `BC:24:11:00:91:01`, 9102 .202 / `BC:24:11:00:91:02`,
-      9201 .203 / `BC:24:11:00:92:01`, 9202 .204 / `BC:24:11:00:92:02`.
-      None answered ping 2026-10-21. dc has no DHCP role; the network is
-      192.168.0.0/22 via gateway 192.168.0.254, so the reservations go on
-      that DHCP server - an operator prep step.
+- [x] IPs: plain DHCP (decided 2026-10-21, replacing the earlier
+      reservations plan when slots went to 10 + 10) - the IP is read
+      from the guest agent each time. Each slot keeps a fixed MAC,
+      `BC:24:11:00:91:NN` for Windows slot 91NN and `BC:24:11:00:92:NN`
+      for Ubuntu slot 92NN, so the router's lease table shows which slot
+      is which. Network 192.168.0.0/22, DHCP from 192.168.0.254.
 - [x] Ubuntu slots: no AD join for now (decided 2026-10-21) - spec 007
       uses the local `masterchief` user with Key B.
 - [x] Storage: keep `local` (decided 2026-10-21) - room for custom

@@ -35,7 +35,7 @@ note on that privilege level).
 
 Test infrastructure only: the agent may clone, reset and remove its own
 test VMs on Proxmox (spec 009) through an API token scoped to two
-templates and four fixed VM slots. The product never uses this access.
+templates and 20 fixed VM slots (10 Windows, 10 Ubuntu). The product never uses this access.
 
 ## 4. Problem
 There's no repeatable, agent-driven way to take a VM that already exists
@@ -71,8 +71,8 @@ One operator, `masterchief`, managing a home lab.
 ## 7. Non-goals (product level)
 - No VM provisioning or lifecycle management (create/delete/power) on
   any hypervisor - this product only works with VMs that already exist.
-  Exception: the agent's test tooling (spec 009) - at most 2 Windows +
-  2 Ubuntu test VMs, cloned from fixed templates, never any other VM.
+  Exception: the agent's test tooling (spec 009) - at most 10 Windows +
+  10 Ubuntu test VMs, cloned from fixed templates, never any other VM.
   This is development tooling, not a product feature.
 - No application/stack deployment (GitOps or otherwise) - day-2
   operations are limited to lab infrastructure services (AD, DNS,

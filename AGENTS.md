@@ -92,7 +92,8 @@ Read this at the start of every session. Every rule should trace back to an entr
   — out of scope. This product never calls a hypervisor API.
   - **Exception (decided 2026-10-21, spec 009)**: test tooling under its
     own directory may use the `ai-deploy-test@pve` Proxmox token - VMs
-    9101-9102 and 9201-9202 only, cloned from 9000/9001. Product code
+    9101-9110 and 9201-9210 only (10 + 10, widened from 2 + 2 on
+    2026-10-21), cloned from 9000/9001. Product code
     (onboarding, operations, UI) must never import or call it, and no
     product test may require it - tests take any target IP.
 - Two distinct SSH keys, not one shared key:
@@ -208,7 +209,7 @@ Read this at the start of every session. Every rule should trace back to an entr
 - Rule: any destructive action on an onboarded VM always requires
   explicit confirmation regardless of mode.
   - **Exception (decided 2026-10-21, spec 009)**: no confirmation for
-    actions confined to the four test slots (9101-9102, 9201-9202):
+    actions confined to the 20 test slots (9101-9110, 9201-9210):
     clone, start, stop, snapshot, reset, deliberate breakage for tests,
     and removal - and for joining/removing those VMs' computer objects
     in `OU=ai-deploy-test` via the join-only account. Everything else
