@@ -54,6 +54,45 @@ Injection/secrets: none found (name/IP validated, list argv, constant remote com
 ### Outcome
 Not clean - back to Develop (fix tasks T11-T12 added to tasks.md)
 
+## Test run 2 - 2026-10-21
+**Diff reviewed:** dfe1a84..3aa5b45
+
+### Tests
+Command (on `ai-deploy`): `AI_DEPLOY_TEST_TARGET=192.168.3.1 AI_DEPLOY_TEST_TARGET_UBUNTU=192.168.0.84 python3 -m pytest` - 118 passed, 3 skipped (destructive). Then `tests/live/test_ubuntu_destructive.py --allow-destructive` with `AI_DEPLOY_TEST_LAB_VMID=9201` - 2 passed (slot still at .84 after rollback). 001's destructive AC3 not run yet.
+
+| AC | Test | Result |
+|----|------|--------|
+| AC1-AC12 | as run 1 | Pass |
+| AC6 (tooling) | fix T11: 45 unit tests - out-of-range VMIDs refused before any API call, slots reach it; fix T12: fixture refuses when slot IP != target (checked live: 192.0.2.1 target -> refused, no snapshot taken; VMID 9001 -> refused) | Pass |
+
+T11's test was confirmed to fail against the pre-fix helper.
+
+### Static checks
+| Check | Command | Result |
+|-------|---------|--------|
+| ruff lint | `ruff check .` | All checks passed |
+| ruff format | `ruff format --check .` | 96 files already formatted |
+
+### Independent review
+Reviewer inputs: `spec.md`, the diff above, the static check output - nothing else (plus the slot rule from `AGENTS.md`).
+
+| # | Severity | Finding | Location | Status |
+|---|----------|---------|----------|--------|
+| 1 | blocking | AC3 fixture's setup (`tee` drop-in `&&` restart) runs before `try:`; if the restart fails after the `tee`, the `PasswordAuthentication yes` drop-in is never removed | `tests/live/test_ubuntu_destructive.py` `password_auth_on` | open |
+| 2 | advisory | AC3 test has no slot guard (as run 1 #3) | `test_ac3_password_auth_enabled_fails_password_auth` | open |
+| 3 | advisory | methods-probe timeout tagged `[password-auth]` (as run 1 #4) | `onboard/ubuntu.py` `password_auth` | open |
+| 4 | advisory | `sudo -n true` passes a narrow or cached grant (as run 1 #5); suggests `sudo -k -n` + `sudo -n -l` | `onboard/ubuntu.py` `IDENTITY_PROBE` | open |
+| 5 | advisory | existing entry not checked for OS group / R5 values (as run 1 #6) | `onboard/cli.py` `_onboard` | open |
+| 6 | advisory | Proxmox TLS unverified (as run 1 #7; track in 009) | `testlab/proxmox.py` `_call` | open |
+| 7 | advisory | Ubuntu tests don't prove refused vs timed-out wording (as run 1 #10) | `tests/live/test_ubuntu_live.py` | open |
+| 8 | advisory | AC6 fixture skips `delete_snapshot` if rollback/start/ipv4 raises (slot only) | `sudo_broken_on_lab_slot` | open |
+| 9 | advisory | `ipv4()` first non-loopback address may be a second interface; fixture then fails safe (as run 1 #9) | `testlab/proxmox.py` `ipv4` | open |
+
+Run 1 blocking #1 and #2: fixed (T12, T11) - reviewer confirmed the slot guard and no `onboard/` import of `testlab`.
+
+### Outcome
+Not clean - back to Develop (fix task T13 added to tasks.md)
+
 ## Decision
 <!-- Accepted YYYY-MM-DD (masterchief)
      or Rejected YYYY-MM-DD (masterchief) -> Develop|Plan: <reason> -->

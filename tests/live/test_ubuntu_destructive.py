@@ -24,13 +24,15 @@ RESTART = "sudo systemctl restart ssh.socket ssh.service"
 @pytest.fixture
 def password_auth_on(ubuntu_ip, tmp_path):
     kh = tmp_path / "admin_known_hosts"
-    on = ubuntu_ssh(
-        ubuntu_ip,
-        kh,
-        f"echo 'PasswordAuthentication yes' | sudo tee {DROPIN} >/dev/null && {RESTART}",
-    )
-    assert on.returncode == 0, on
     try:
+        # Inside the try: if the restart fails after the drop-in is written,
+        # the finally still removes it.
+        on = ubuntu_ssh(
+            ubuntu_ip,
+            kh,
+            f"echo 'PasswordAuthentication yes' | sudo tee {DROPIN} >/dev/null && {RESTART}",
+        )
+        assert on.returncode == 0, on
         yield ubuntu_ip
     finally:
         off = ubuntu_ssh(ubuntu_ip, kh, f"sudo rm -f {DROPIN} && {RESTART}")

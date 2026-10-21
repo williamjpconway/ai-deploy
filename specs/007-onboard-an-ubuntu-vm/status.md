@@ -2,7 +2,7 @@
 
 **Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** Test run 2 - agent
+**Next:** Test run 3 - agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
