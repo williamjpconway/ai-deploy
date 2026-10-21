@@ -1,8 +1,8 @@
 # Status 001: Onboard a Windows VM
 
-**Stage:** Test
+**Stage:** Accept
 **Last reconciled:** 2026-10-21
-**Next:** waiting on G4 - review 001 (operator)
+**Next:** done
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -14,6 +14,7 @@
 | G2 | Spec Ready | masterchief | 2026-10-21 | Ready |
 | G3 | Plan approved -> Develop | masterchief | 2026-10-21 | Approved |
 | G4 | Accept / reject | masterchief | 2026-10-21 | Rejected -> Develop: "can we fix any of the advisory findings now?" - fix the clearer-errors group (run 2 advisory #1, #3b, #6, #7) |
+| G4 | Accept / reject | masterchief | 2026-10-21 | Accepted |
 
 ## Work log
 <!-- One line per session, newest last. Never edit old lines.
@@ -25,3 +26,4 @@
 - 2026-10-21 - T1-T4, T6-T8 done: 23 tests pass (unit + live vs dc 192.168.3.1), ruff clean; masterchief added to BUILTIN\Administrators on dc by operator; auth/identity errors now name the exact fix - T5 open: AC3 destructive run approved but blocked by auto mode
 - 2026-10-21 - T5 done (AC3 passed on dc, operator-run); Test run 1 not clean (3 blocking) -> T9-T11 fixed; Test run 2 clean, 27 tests pass, ruff clean, 10 advisory findings open - waiting on G4
 - 2026-10-21 - G4 rejected -> Develop to fix clearer-errors advisories; T12-T15 done; Test run 3 clean, 40 tests pass, ruff clean, 11 advisory findings open - waiting on G4
+- 2026-10-21 - G4 accepted after Test run 3 - 11 advisory findings left open in review.md; operator raised Proxmox test-VM capability as next scope

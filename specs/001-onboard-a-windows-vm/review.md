@@ -153,3 +153,4 @@ Clean - waiting on G4
 <!-- Accepted YYYY-MM-DD (masterchief)
      or Rejected YYYY-MM-DD (masterchief) -> Develop|Plan: <reason> -->
 Rejected 2026-10-21 (masterchief) -> Develop: "can we fix any of the advisory findings now?" - fix the clearer-errors group (Test run 2 advisory #1, #3b, #6, #7); the rest stay open.
+Accepted 2026-10-21 (masterchief)
