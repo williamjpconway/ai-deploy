@@ -30,6 +30,7 @@ EXIT_CODES = {
     "prereq": 12,
     "key": 13,
     "inventory": 14,
+    "password-auth": 15,
 }
 
 

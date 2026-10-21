@@ -72,7 +72,7 @@ def known_hosts_option(known_hosts):
     return f'UserKnownHostsFile="{known_hosts}"'
 
 
-def ssh_argv(ip, port, key, known_hosts, command):
+def ssh_argv(ip, port, key, known_hosts, command, extra_options=()):
     return [
         "ssh",
         "-F",
@@ -93,6 +93,7 @@ def ssh_argv(ip, port, key, known_hosts, command):
         "StrictHostKeyChecking=accept-new",
         "-o",
         known_hosts_option(known_hosts),
+        *extra_options,
         f"{USER}@{ip}",
         command,
     ]

@@ -3,7 +3,7 @@ and spec 007 (Ubuntu). The shared flow is in onboard/cli.py."""
 
 from dataclasses import dataclass, field
 
-from onboard import windows
+from onboard import ubuntu, windows
 
 
 @dataclass(frozen=True)
@@ -23,4 +23,9 @@ WINDOWS = Profile(
     ping_module="ansible.windows.win_ping",
 )
 
-UBUNTU = None  # spec 007, T3
+UBUNTU = Profile(
+    prog="onboard-ubuntu",
+    group="ubuntu",
+    os_checks=(ubuntu.identity, ubuntu.password_auth),
+    ping_module="ansible.builtin.ping",
+)

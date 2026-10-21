@@ -4,6 +4,12 @@
 Usage: onboard-ubuntu --name <inventory-name> --ip <ip>
 """
 
+import os
 import sys
 
-sys.exit(1)
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+from onboard.cli import main  # noqa: E402
+from onboard.profiles import UBUNTU  # noqa: E402
+
+sys.exit(main(profile=UBUNTU))
