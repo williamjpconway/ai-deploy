@@ -49,6 +49,13 @@ def test_ac6_wrong_identity_or_no_admin_fails_the_identity_check(identity, tmp_p
     assert snapshot(inventory) == {}
 
 
+def test_ac6_missing_admin_says_what_to_add(tmp_path, capsys):
+    runner = StubRunner(identity=(0, "ID:LAB\\masterchief|ADMIN:False", ""))
+    _, output, _ = run(tmp_path, runner, capsys)
+    assert "Add-ADGroupMember -Identity S-1-5-32-544 -Members masterchief" in output
+    assert "Add-LocalGroupMember -SID S-1-5-32-544 -Member masterchief" in output
+
+
 def test_ac7_failed_ansible_ping_leaves_inventory_byte_identical(tmp_path, capsys):
     inventory = tmp_path / "inventory"
     write_host(inventory, "existing", "192.168.3.50")

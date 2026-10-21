@@ -55,6 +55,9 @@ def test_ac2_unknown_key_fails_authentication_naming_both_causes(
     assert check_tag(proc.output) == "authentication"
     assert "administrators_authorized_keys" in proc.output
     assert "Administrators group" in proc.output
+    # The operator is told exactly what to add, not just what's wrong.
+    assert "Add-ADGroupMember -Identity S-1-5-32-544 -Members masterchief" in proc.output
+    assert "Add-LocalGroupMember -SID S-1-5-32-544 -Member masterchief" in proc.output
     assert snapshot(inventory_dir) == {}
 
 

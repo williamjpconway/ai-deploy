@@ -80,10 +80,17 @@ def ssh(runner, ip, port, key, known_hosts, command):
         if "Permission denied" in err:
             raise CheckFailed(
                 "authentication",
-                f"{ip} rejected key {key} for {USER}. Either the key isn't in "
-                "C:\\ProgramData\\ssh\\administrators_authorized_keys on the target, or "
-                f"{USER} isn't a member of the target's Administrators group (sshd only "
-                "reads that file for Administrators members).",
+                f"{ip} rejected key {key} for {USER}. sshd can't tell these apart, so "
+                "check both on the target:\n"
+                f"  1. {USER} must be in the Administrators group (sshd only reads "
+                "administrators_authorized_keys for its members). Add it with:\n"
+                f"       domain controller: Add-ADGroupMember -Identity S-1-5-32-544 "
+                f"-Members {USER}\n"
+                f"       other servers:     Add-LocalGroupMember -SID S-1-5-32-544 "
+                f"-Member {USER}\n"
+                f"  2. The public half of the key ({key}.pub) must be in "
+                "C:\\ProgramData\\ssh\\administrators_authorized_keys - re-run "
+                "utils/onboarding/windows2025/Initialize-SshOnboarding.ps1 to install it.",
             )
         raise CheckFailed("ssh", f"SSH to {ip} failed: {err.strip() or 'no error output'}")
     return result
@@ -118,7 +125,9 @@ def identity(runner, ip, port, key, known_hosts):
         raise CheckFailed(
             "identity",
             f"session on {ip} is {name} but it isn't a member of Administrators "
-            f"({ADMINISTRATORS_SID})",
+            f"({ADMINISTRATORS_SID}). Add it with: Add-ADGroupMember -Identity "
+            f"{ADMINISTRATORS_SID} -Members {USER} (domain controller) or "
+            f"Add-LocalGroupMember -SID {ADMINISTRATORS_SID} -Member {USER} (other servers)",
         )
 
 
