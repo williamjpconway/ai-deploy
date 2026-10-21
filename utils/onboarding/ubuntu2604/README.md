@@ -23,6 +23,26 @@ Idempotent and supports `--dry-run`. See the script's own header
 comment for why each step exists - they're all real, confirmed gaps
 found setting up `ai-deploy` itself, not hypothetical.
 
+## Then, last: seal it as a Proxmox template (spec 009)
+
+```bash
+sudo ./seal-template.sh --dry-run    # preview
+sudo ./seal-template.sh --shutdown   # seal and power off - don't boot it again
+```
+
+Then convert the VM to template 9001 (`qm set 9001 --agent 1`,
+`qm template 9001`) and re-add the token's ACL on `/vms/9001` -
+destroying or replacing a VM removes its ACL.
+
+This script installs `qemu-guest-agent` (so Proxmox can report each
+clone's IP), makes sure nothing stops cloud-init reading the Proxmox
+cloud-init drive (so each clone gets its own hostname), resets the
+machine-id, and removes the SSH host keys (each clone makes its own;
+a systemd drop-in regenerates them if cloud-init ever doesn't run).
+Verified 2026-10-21: a fresh clone got its IP from the guest agent, its
+own hostname, machine-id and SSH host key, and Key B + passwordless
+sudo still worked.
+
 ## What "ready for onboarding" means after this runs
 
 - SSH reachable on port 22.
