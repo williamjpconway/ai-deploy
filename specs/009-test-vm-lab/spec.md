@@ -21,7 +21,10 @@ VM.
 ## 3. Non-goals
 - The product itself still never calls a hypervisor API. This is test
   tooling only: onboarding, operations and the UI (specs 000-008) must
-  not use it or depend on it.
+  not use it or depend on it, and no product test may require it -
+  product tests take any target IP (decided 2026-10-21).
+- No UI for the lab: the web UI (specs 000/002) doesn't show or manage
+  test VMs. That would be a new roadmap item.
 - No VMs beyond the four fixed slots, and no access to any other VM
   (including `dc` and `ai-deploy`).
 - Does not build or re-seal the templates. Re-sealing
@@ -112,10 +115,9 @@ VM.
   don't assume.
 
 ## 8. Open questions
-- [ ] Scope change: `BRIEF.md` (non-goal "no VM provisioning") and
-      `AGENTS.md` ("no hypervisor API access of any kind", "no
-      provisioning tool") need an explicit carve-out for this test
-      tooling. Exact wording to agree.
+- [x] Scope change: carve-out agreed 2026-10-21 and written into
+      `BRIEF.md` (sections 2, 3, 6, 7) and `AGENTS.md` (Infrastructure
+      access, Tools).
 - [ ] Confirmation rules inside the sandbox: `AGENTS.md` requires
       confirmation for destructive actions on onboarded VMs and for AD
       writes. Proposed: none needed for create/reset/remove of the four

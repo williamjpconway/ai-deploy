@@ -14,7 +14,8 @@ A control-plane VM (Ubuntu, Claude Code installed) that connects via SSH
 to existing, already-installed VMs. Two jobs:
 - **Onboard**: verify SSH/credentials/user/shell and add the VM to
   Ansible inventory. No VM provisioning, no hypervisor API access, no
-  OS installation.
+  OS installation. (The agent's own test tooling is the one exception -
+  see section 7.)
 - **Operate**: run a fixed, named set of day-2 operations against
   onboarded VMs via Ansible playbooks - AD users/groups, DNS records
   and certificates on the DC, plus a browser terminal to any onboarded
@@ -31,6 +32,10 @@ Windows Domain Controller / CA / DNS target specifically, a domain
 account with Domain Admin rights is required to run the AD, DNS and
 certificate playbooks (see `AGENTS.md` for scope and the known-risk
 note on that privilege level).
+
+Test infrastructure only: the agent may clone, reset and remove its own
+test VMs on Proxmox (spec 009) through an API token scoped to two
+templates and four fixed VM slots. The product never uses this access.
 
 ## 4. Problem
 There's no repeatable, agent-driven way to take a VM that already exists
@@ -50,7 +55,9 @@ One operator, `masterchief`, managing a home lab.
   user or certificate, and never an error on re-run.
 - Hypervisor-agnostic: onboarding works the same whether the VM came
   from Proxmox, vCenter, or anywhere else - never branches logic on
-  where the VM came from.
+  where the VM came from. Test VMs from the Proxmox test lab are
+  ordinary targets to the product - no product code knows or checks
+  that a target is a test VM.
 - Verify, don't assume: onboarding always confirms the target is
   actually reachable and matches the expected user/shell setup before
   marking it onboarded - never adds it to inventory on faith.
@@ -64,6 +71,9 @@ One operator, `masterchief`, managing a home lab.
 ## 7. Non-goals (product level)
 - No VM provisioning or lifecycle management (create/delete/power) on
   any hypervisor - this product only works with VMs that already exist.
+  Exception: the agent's test tooling (spec 009) - at most 2 Windows +
+  2 Ubuntu test VMs, cloned from fixed templates, never any other VM.
+  This is development tooling, not a product feature.
 - No application/stack deployment (GitOps or otherwise) - day-2
   operations are limited to lab infrastructure services (AD, DNS,
   certificates, terminal access), not deploying workloads onto VMs.

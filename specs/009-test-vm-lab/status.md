@@ -10,7 +10,7 @@
 ## Gates
 | Gate | Touchpoint | Who | Date | Result |
 |------|------------|-----|------|--------|
-| G1 | Start | masterchief | | |
+| G1 | Start | masterchief | 2026-10-21 | Started |
 | G2 | Spec Ready | masterchief | | |
 | G3 | Plan approved -> Develop | masterchief | | |
 | G4 | Accept / reject | masterchief | | |
