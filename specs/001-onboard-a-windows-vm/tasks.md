@@ -12,3 +12,6 @@
 - [x] **T6** Stage host file in temp inventory, `win_ping` through it, atomic commit or discard (covers AC5, AC7)
 - [x] **T7** Existing-entry path: verify-only re-run, "already onboarded", no writes on failure (covers AC4, AC8)
 - [x] **T8** `AGENTS.md` (Run tests / Checks / Run the app commands) and `install-ansible.sh` adds ruff via pipx with `--dry-run`; full suite + `ruff check` + `ruff format --check` clean on `ai-deploy` (covers AC1-AC12)
+- [ ] **T9** (fix, run 1) SSH timeout and other non-255 transport failures reported as `[ssh]`, never `[shell]`/`[identity]`; unit test for rc 124 (finding 1; covers AC3, AC6)
+- [ ] **T10** (fix, run 1) Commit never overwrites an existing host file (no-clobber link), and a lock spans conflict check -> commit; unit tests (finding 2; covers AC4, AC9)
+- [ ] **T11** (fix, run 1) AC9 name-taken test asserts the seeded conflicting IP (finding 3; covers AC9)
