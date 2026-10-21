@@ -200,12 +200,10 @@ Read this at the start of every session. Every rule should trace back to an entr
     `ansible_shell_type: powershell` is a lie — the remote shell is
     actually cmd, and anything with a semicolon or PowerShell syntax
     fails confusingly.
-- **Not yet confirmed end-to-end for Ubuntu**: the prep script
-  (`utils/onboarding/ubuntu2604/`) passed its own verification on
-  `tmplubuntu2604`, but an actual `ai-deploy` → `tmplubuntu2604`
-  connection test wasn't properly attempted yet - the user suspects
-  SSH key access was the blocker. Revisit before treating Ubuntu
-  onboarding as proven the way Windows now is.
+- **Ubuntu SSH access confirmed 2026-10-21** (spec 009 spike): a clone
+  of `tmpl-ubuntu2604` accepts Key B as `masterchief` from `ai-deploy`
+  and has passwordless sudo. Ubuntu *onboarding* itself (spec 007)
+  isn't built yet.
 - Rule: any destructive action on an onboarded VM always requires
   explicit confirmation regardless of mode.
   - **Exception (decided 2026-10-21, spec 009)**: no confirmation for
