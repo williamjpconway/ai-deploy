@@ -97,8 +97,7 @@ def check_tag(output):
 
 
 GOOD_UBUNTU_IDENTITY = "ID:masterchief|SUDO:yes"
-KEYS_ONLY = "masterchief@192.168.3.1: Permission denied (publickey).
-"
+KEYS_ONLY = "masterchief@192.168.3.1: Permission denied (publickey).\r\n"
 
 
 class UbuntuStubRunner(StubRunner):
