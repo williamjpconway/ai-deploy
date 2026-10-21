@@ -13,6 +13,8 @@ Read this at the start of every session. Every rule should trace back to an entr
   Ansible, playbooks) stays in PowerShell/bash per the existing Tools
   rules - this stack is specifically for the web UI.
 - Run tests: `<command>`
+- Checks (static, run at Test stage): `<commands>` - to be decided
+  during spec 001's plan.
 - Run the app: `<command>`
 - Control VM (the ai-deploy VM itself, not a target to onboard):
   hostname `ai-deploy`, IP `192.168.3.2` (eth0), Ubuntu 26.04.1 LTS, VM
@@ -196,22 +198,23 @@ Read this at the start of every session. Every rule should trace back to an entr
 
 ## Workflow
 - Read `BRIEF.md` first. Specs inherit its principles and non-goals.
-- When a conversation converges on real, concrete scope not already on
-  the roadmap, proactively run `skills/new-feature/` (confirm with the
-  user first, don't spawn a folder for every passing idea) rather than
-  waiting to be asked.
-- Every roadmap item's Status is exactly one of Plan / Develop / Test /
-  Accept (`skills/new-feature/SKILL.md` has the full lifecycle). Keep
-  `ROADMAP.md` current as a feature moves between them.
+- The feature lifecycle (stages, gates G1-G4, reconciliation,
+  bookkeeping) is defined only in `LIFECYCLE.md`. Follow it; don't
+  restate it elsewhere.
+- Skills under `skills/` aren't auto-loaded. When the operator says one
+  of these, read and follow that skill:
+  - "new feature: ..." - or a conversation converges on real scope not
+    on the roadmap (confirm first) -> `skills/new-feature/SKILL.md`
+  - "let's plan NNN" -> `skills/plan-feature/SKILL.md`
+  - "build NNN" -> `skills/build-feature/SKILL.md`
+  - "review NNN" -> `skills/accept-feature/SKILL.md`
+  - "work on NNN" -> read `specs/NNN-*/status.md`, run the skill for
+    its current stage
+- Gates G1-G4 are the operator's decisions. Record them; never make them.
+- Never write code for a feature before its G3 (plan approved) is
+  recorded in its `status.md`.
 - Work from `specs/NNN-*/tasks.md`, one task at a time (Develop stage).
-- Don't write code for a feature until its `plan.md` has been approved
-  (still in Plan stage).
-- A feature only reaches Test once every acceptance criterion in its
-  spec runs as an actual automated test - built-without-error is never
-  treated as working.
-- Accept/reject at the Test→Accept gate is the user's call, not an
-  automatic pass. Log a reject in `retro.md` with which stage it
-  bounced back to and why.
+- Built-without-error is never treated as working - only passing tests are.
 - If the spec is ambiguous, stop and ask. Don't guess.
 
 ## Scripts: write → test → approve

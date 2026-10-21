@@ -28,9 +28,9 @@ a mistake-recovery procedure, so it's written up front instead of earned.
    features for `ROADMAP.md`. For each, state the reasoning in one line:
    thinnest end-to-end slice, hard dependency, or highest-risk unknown.
    Don't just list feature names with no justification.
-5. Let the user pick, reorder, or edit the 3 candidates, then write the
-   chosen order into `ROADMAP.md` as `Status: Planned` (no spec folder
-   yet — that's created later, per the main loop).
+5. Let the user pick, reorder, or edit the 3 candidates, then run
+   `skills/new-feature/` for each chosen one, in order - it creates the
+   `ROADMAP.md` row and the spec folder together, at Stage Plan.
 6. Flip `BRIEF.md` to `Status: Agreed` only once the user confirms it
    matches their intent.
 

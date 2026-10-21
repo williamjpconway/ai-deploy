@@ -6,7 +6,8 @@
 
 ## 1. Problem
 This is the first UI requirement anywhere in the product (needed by
-spec 001's new Validate/Onboard buttons, and later specs 002 and 008).
+spec 002's connected-VMs page and Validate/Onboard actions, and later
+spec 008).
 There's no web UI, no authentication, and no app-data storage yet -
 building that scaffolding as a side effect of 001 would conflate a
 foundational decision with a single feature's needs.
@@ -14,13 +15,13 @@ foundational decision with a single feature's needs.
 ## 2. Goal
 An operator can log into a web UI on `ai-deploy` using their existing
 Ubuntu local account credentials, and the backend is wired to Postgres
-(app state) and Vault (secrets) - ready for 001, 002, and 008 to add
+(app state) and Vault (secrets) - ready for 002 and 008 to add
 their own pages/actions on top.
 
 ## 3. Non-goals
 - Does not implement any feature-specific page or action itself
   (onboarding triggers, the connected-VMs list, the terminal) - those
-  are specs 001/002/008.
+  are specs 002/008.
 - Does not implement multi-user roles or permissions - the brief
   assumes a single operator; PAM login just confirms identity, it's
   not a multi-tenant permission system.

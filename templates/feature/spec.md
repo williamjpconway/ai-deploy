@@ -1,6 +1,6 @@
 # Spec NNN: <Feature name>
 
-**Status:** Draft | Ready | In progress | Done
+**Status:** Draft | Ready   <!-- spec readiness only - feature progress lives in status.md -->
 **Date:** YYYY-MM-DD
 **Brief:** [../../BRIEF.md](../../BRIEF.md) · **Roadmap item:** NNN
 

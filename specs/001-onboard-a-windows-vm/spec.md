@@ -31,6 +31,9 @@ specific failure if it isn't actually ready.
 - Does not provide a Terminal/shell-access action for onboarded VMs -
   that's spec 008, a distinct concern (a live interactive session vs.
   a one-shot validate/onboard action).
+- Does not provide UI Validate/Onboard buttons - moved to spec 002
+  (2026-10-21) so this spec is a CLI-only first slice with no
+  dependency on spec 000.
 
 ## 4. User scenarios
 - As the operator, I want to point ai-deploy at a prepared Windows VM
@@ -66,13 +69,6 @@ specific failure if it isn't actually ready.
 - **R7** The system SHOULD report which specific step failed when
   onboarding doesn't succeed, matching R1/R2/R3's distinct failure
   messages rather than one generic "onboarding failed."
-- **R8** (added 2026-10-20) The UI (spec 000) MUST expose a "Validate"
-  action that runs R1-R3 against a target and shows pass/fail per
-  check, without performing R4-R6 - a target is never added to
-  inventory by Validate alone, even if every check passes.
-- **R9** (added 2026-10-20) The UI MUST expose an "Onboard" action that
-  performs the full R1-R6 flow and displays the result, with the same
-  per-step failure detail as R7.
 
 ## 6. Acceptance criteria
 - **AC1** (R1) Given a target with SSH blocked or unreachable, when
@@ -92,22 +88,10 @@ specific failure if it isn't actually ready.
   `Initialize-SshOnboarding.ps1`), when onboarding runs, then the
   target appears in Ansible inventory and an Ansible ping-equivalent
   module against it succeeds.
-- **AC6** (R8) Given a target that would fail onboarding (e.g.
-  unreachable), when "Validate" is clicked in the UI, then the UI
-  shows which check failed, and the target is NOT added to inventory.
-- **AC7** (R8) Given a target that would pass every check, when
-  "Validate" is clicked, then the UI shows all checks passing, and the
-  target is still NOT added to inventory - Validate never onboards.
-- **AC8** (R9) Given a correctly prepared target, when "Onboard" is
-  clicked in the UI, then the same outcome as AC5 occurs, displayed in
-  the UI.
 
 ## 7. Constraints
 - None beyond the brief's principles (idempotent, hypervisor-agnostic,
   verify-don't-assume, no bespoke agent software on targets).
-- R8/R9 depend on spec 000 (UI foundation) existing first - this spec
-  can still reach Develop/Test on its non-UI requirements (R1-R7)
-  independently, since those don't need a UI to exist.
 
 ## 8. Open questions
 - [x] Which Ansible module confirms connectivity through inventory

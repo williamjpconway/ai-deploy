@@ -13,4 +13,6 @@ spec folder together.
 | 001 | <thinnest end-to-end slice> | Plan | - |
 | 002 | | Plan | - |
 
-Status: Plan → Develop → Test → Accept (see skills/new-feature/SKILL.md for the full lifecycle)
+Rows are in build order; # is a stable ID, not the order.
+
+Status mirrors each feature's `status.md` Stage: Plan → Develop → Test → Accept (see `LIFECYCLE.md`).
