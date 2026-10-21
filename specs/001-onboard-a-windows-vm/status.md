@@ -1,8 +1,8 @@
 # Status 001: Onboard a Windows VM
 
-**Stage:** Develop
+**Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** fix tasks T9-T11 (Test run 1 findings 1-3) - waiting on agent
+**Next:** Test run 2 in progress - waiting on agent
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->

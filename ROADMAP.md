@@ -2,7 +2,7 @@
 
 | # | Feature | Status | Spec |
 |---|---------|--------|------|
-| 001 | Onboard a Windows VM (DC/CA/DNS) - CLI | Develop | [specs/001-onboard-a-windows-vm](specs/001-onboard-a-windows-vm/spec.md) |
+| 001 | Onboard a Windows VM (DC/CA/DNS) - CLI | Test | [specs/001-onboard-a-windows-vm](specs/001-onboard-a-windows-vm/spec.md) |
 | 000 | Basic UI foundation (login, Postgres, Vault) | Plan | [specs/000-basic-ui-foundation](specs/000-basic-ui-foundation/spec.md) |
 | 002 | UI: connected VMs + Validate/Onboard actions | Plan | [specs/002-ui-show-connected-vms](specs/002-ui-show-connected-vms/spec.md) |
 | 003 | Create/Delete a DNS Record | Plan | [specs/003-create-delete-dns-record](specs/003-create-delete-dns-record/spec.md) |
