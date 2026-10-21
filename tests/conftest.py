@@ -24,14 +24,16 @@ def pytest_collection_modifyitems(config, items):
     ubuntu_target = os.environ.get("AI_DEPLOY_TEST_TARGET_UBUNTU")
     lab_vmid = os.environ.get("AI_DEPLOY_TEST_LAB_VMID")
     destructive_ok = config.getoption("--allow-destructive")
+    # Real markers only: item.keywords also holds directory names, so "live"
+    # would match every test under tests/live/.
     for item in items:
-        if "live" in item.keywords and not target:
+        if item.get_closest_marker("live") and not target:
             item.add_marker(pytest.mark.skip(reason="AI_DEPLOY_TEST_TARGET not set"))
-        if "live_ubuntu" in item.keywords and not ubuntu_target:
+        if item.get_closest_marker("live_ubuntu") and not ubuntu_target:
             item.add_marker(pytest.mark.skip(reason="AI_DEPLOY_TEST_TARGET_UBUNTU not set"))
-        if "lab" in item.keywords and not lab_vmid:
+        if item.get_closest_marker("lab") and not lab_vmid:
             item.add_marker(pytest.mark.skip(reason="AI_DEPLOY_TEST_LAB_VMID not set (optional)"))
-        if "destructive" in item.keywords and not destructive_ok:
+        if item.get_closest_marker("destructive") and not destructive_ok:
             item.add_marker(pytest.mark.skip(reason="needs --allow-destructive"))
 
 
