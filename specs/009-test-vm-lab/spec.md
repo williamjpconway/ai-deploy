@@ -154,14 +154,13 @@ VM.
       A Claude Code permission rule for the lab tooling's commands may
       also be needed (auto mode blocked 001's approved AC3 run) -
       deferred to plan.md, once the commands exist.
-- [x] Windows product key for test clones: evaluation edition
-      (decided 2026-10-21) - a new Windows Server 2025 install from the
-      evaluation ISO, so the answer file carries no key.
-- [x] Template: the operator moves the current retail template to VMID
-      9003 (kept for real VMs, never in the token's scope) and the
-      evaluation build becomes VMID 9000 (decided 2026-10-21). Re-check
-      the token's ACL on `/vms/9000` after the swap - removing the old
-      9000 very likely removes it.
+- [x] Windows product key for test clones: full retail Windows with
+      the operator's key in the answer file, like-for-like (decided
+      2026-10-21, replacing the earlier evaluation-edition choice). The
+      answer file is removed from every clone by `SetupComplete.cmd`.
+- [x] Template: retail Windows re-sealed as VMID 9000 (done 2026-10-21);
+      the token's ACL on `/vms/9000` re-added after the swap (removing a
+      VM removes its ACL - confirmed).
 - [x] AD prep (decided 2026-10-21): OU
       `OU=ai-deploy-test,OU=ai-deploy,DC=domain,DC=internal`; join-only
       account `svc-ai-deploy-join` (join/remove computers in that OU
