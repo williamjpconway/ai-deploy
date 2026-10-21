@@ -56,6 +56,12 @@ def sudo_broken_on_lab_slot(ubuntu_ip, tmp_path):
     vmid = int(os.environ["AI_DEPLOY_TEST_LAB_VMID"])
     snap = f"pre-ac6-{int(time.time())}"
     kh = tmp_path / "admin_known_hosts"
+    # The rollback restores the slot, so sudo may only be broken on the slot
+    # itself - refuse before changing anything if the target IP is elsewhere.
+    slot_ip = proxmox.ipv4(vmid)
+    assert slot_ip == ubuntu_ip, (
+        f"slot {vmid} is at {slot_ip}, not the target {ubuntu_ip} - nothing changed"
+    )
     proxmox.snapshot(vmid, snap)
     try:
         # Both grants: initialize-ssh-onboarding.sh's and cloud-init's own.

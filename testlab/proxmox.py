@@ -1,8 +1,9 @@
 """Minimal Proxmox snapshot helper for lab-only tests (spec 007 AC6; spec 009 grows it).
 
 Uses the ai-deploy-test@pve token from ~/.config/ai-deploy/proxmox.env and only
-touches the VMID it's given - Proxmox itself refuses anything outside the test
-slots. Never imported by onboard/ (AGENTS.md). Never prints the token.
+touches the VMID it's given, which must be a test slot (AGENTS.md) - checked
+here before any API call, as well as by the token's ACL. Never imported by
+onboard/ (AGENTS.md). Never prints the token.
 """
 
 import json
@@ -15,6 +16,7 @@ from pathlib import Path
 
 ENV_FILE = Path.home() / ".config" / "ai-deploy" / "proxmox.env"
 TASK_TIMEOUT = 300
+SLOTS = (range(9101, 9111), range(9201, 9211))
 
 
 def _env():
@@ -49,6 +51,17 @@ def _call(verb, path, params=None):
         raise RuntimeError(f"Proxmox {verb} {path}: HTTP {e.code} {e.reason}") from None
 
 
+def _slot(vmid):
+    """The VMID as an int, or ValueError if it isn't one of the test slots."""
+    try:
+        n = int(vmid)
+    except (TypeError, ValueError):
+        n = None
+    if n is None or not any(n in r for r in SLOTS):
+        raise ValueError(f"VMID {vmid!r} is not a test slot (9101-9110, 9201-9210)")
+    return n
+
+
 def _wait(upid):
     deadline = time.monotonic() + TASK_TIMEOUT
     while time.monotonic() < deadline:
@@ -62,25 +75,30 @@ def _wait(upid):
 
 
 def snapshot(vmid, name):
+    vmid = _slot(vmid)
     _wait(_call("POST", f"/qemu/{vmid}/snapshot", {"snapname": name}))
 
 
 def rollback(vmid, name):
+    vmid = _slot(vmid)
     _wait(_call("POST", f"/qemu/{vmid}/snapshot/{name}/rollback"))
 
 
 def start(vmid):
+    vmid = _slot(vmid)
     status = _call("GET", f"/qemu/{vmid}/status/current")
     if status.get("status") != "running":
         _wait(_call("POST", f"/qemu/{vmid}/status/start"))
 
 
 def delete_snapshot(vmid, name):
+    vmid = _slot(vmid)
     _wait(_call("DELETE", f"/qemu/{vmid}/snapshot/{name}"))
 
 
 def ipv4(vmid, timeout=180):
     """The VM's first non-loopback IPv4 address, from the QEMU guest agent."""
+    vmid = _slot(vmid)
     deadline = time.monotonic() + timeout
     while time.monotonic() < deadline:
         try:
