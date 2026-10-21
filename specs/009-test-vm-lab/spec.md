@@ -140,19 +140,26 @@ VM.
       evaluation build becomes VMID 9000 (decided 2026-10-21). Re-check
       the token's ACL on `/vms/9000` after the swap - removing the old
       9000 very likely removes it.
-- [ ] AD prep: the join-only account (join/remove computers in
-      `OU=ai-deploy-test` only), the OU, and Group Policy on it
-      (`masterchief` in local Administrators; disable machine account
-      password changes so snapshot rollbacks don't break the domain
-      trust). Names and where the join credential is stored.
+- [x] AD prep (decided 2026-10-21): OU
+      `OU=ai-deploy-test,OU=ai-deploy,DC=domain,DC=internal`; join-only
+      account `svc-ai-deploy-join` (join/remove computers in that OU
+      only); Group Policy on that OU (`masterchief` in local
+      Administrators; machine account password changes disabled so
+      rollbacks don't break the domain trust). Credential in
+      `~/.config/ai-deploy/ad-join.env` (0600) on `ai-deploy` - created
+      with a dummy password, the operator sets the real one. Creating
+      the OU, account and GPOs is an operator prep step (AD write).
 - [x] Reset model: rollback only (decided 2026-10-21). Each slot is
       cloned once and snapshotted `clean`; every reset is a rollback.
       Rebuilding a slot from scratch (destroy + re-clone) is an operator
       step, since destroying a VM very likely removes its slot
       permission - the operator re-adds it.
-- [ ] IPs: DHCP reservations for the four slots (decided 2026-10-21).
-      Still open: the four IPs, which DHCP server holds the
-      reservations, and the fixed MAC per slot.
+- [x] IPs: DHCP reservations (decided 2026-10-21) - 9101
+      192.168.3.201 / `BC:24:11:00:91:01`, 9102 .202 / `BC:24:11:00:91:02`,
+      9201 .203 / `BC:24:11:00:92:01`, 9202 .204 / `BC:24:11:00:92:02`.
+      None answered ping 2026-10-21. dc has no DHCP role; the network is
+      192.168.0.0/22 via gateway 192.168.0.254, so the reservations go on
+      that DHCP server - an operator prep step.
 - [x] Ubuntu slots: no AD join for now (decided 2026-10-21) - spec 007
       uses the local `masterchief` user with Key B.
 - [x] Storage: keep `local` (decided 2026-10-21) - room for custom
