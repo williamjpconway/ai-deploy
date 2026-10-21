@@ -58,17 +58,25 @@ def sudo_broken_on_lab_slot(ubuntu_ip, tmp_path):
     kh = tmp_path / "admin_known_hosts"
     proxmox.snapshot(vmid, snap)
     try:
+        # Both grants: initialize-ssh-onboarding.sh's and cloud-init's own.
         broke = ubuntu_ssh(
-            ubuntu_ip, kh, "sudo mv /etc/sudoers.d/90-masterchief /root/90-masterchief.ac6"
+            ubuntu_ip,
+            kh,
+            "sudo mv /etc/sudoers.d/90-masterchief /etc/sudoers.d/90-cloud-init-users /tmp/",
         )
         assert broke.returncode == 0, broke
+        check = ubuntu_ssh(ubuntu_ip, kh, "sudo -n true 2>/dev/null && echo still-has-sudo")
+        assert "still-has-sudo" not in check.stdout, "sudo still passwordless - test is wrong"
         yield ubuntu_ip
     finally:
         proxmox.rollback(vmid, snap)
         proxmox.start(vmid)
+        # Plain DHCP: the slot may come back on a different address.
+        ip = proxmox.ipv4(vmid)
+        print(f"slot {vmid} back at {ip}" + ("" if ip == ubuntu_ip else " (IP changed)"))
         ok = None
         for _ in range(30):
-            ok = ubuntu_ssh(ubuntu_ip, kh, "sudo -n true && echo sudo-ok")
+            ok = ubuntu_ssh(ip, kh, "sudo -n true && echo sudo-ok")
             if "sudo-ok" in ok.stdout:
                 break
             time.sleep(5)

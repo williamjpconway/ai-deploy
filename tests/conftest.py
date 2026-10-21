@@ -97,6 +97,8 @@ def target_ssh(ip, known_hosts, command):
             "-o",
             "BatchMode=yes",
             "-o",
+            "ConnectTimeout=10",
+            "-o",
             "StrictHostKeyChecking=accept-new",
             "-o",
             f"UserKnownHostsFile={known_hosts}",

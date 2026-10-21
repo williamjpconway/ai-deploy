@@ -77,3 +77,20 @@ def start(vmid):
 
 def delete_snapshot(vmid, name):
     _wait(_call("DELETE", f"/qemu/{vmid}/snapshot/{name}"))
+
+
+def ipv4(vmid, timeout=180):
+    """The VM's first non-loopback IPv4 address, from the QEMU guest agent."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            reply = _call("GET", f"/qemu/{vmid}/agent/network-get-interfaces")
+        except RuntimeError:
+            reply = None  # agent not up yet
+        for iface in (reply or {}).get("result", []):
+            for addr in iface.get("ip-addresses", []):
+                ip = addr["ip-address"]
+                if addr["ip-address-type"] == "ipv4" and not ip.startswith(("127.", "169.254.")):
+                    return ip
+        time.sleep(5)
+    raise RuntimeError(f"VM {vmid} reported no IPv4 address within {timeout}s")
