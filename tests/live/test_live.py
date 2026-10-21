@@ -21,11 +21,21 @@ def ansible_bin():
     return shutil.which("ansible") or str(Path.home() / ".local" / "bin" / "ansible")
 
 
-def test_ac1_refused_port_fails_reachability(cli, target_ip, inventory_dir):
-    proc = cli("--name", NAME, "--ip", target_ip, "--port", "1")
+def test_ac1_refused_port_fails_reachability(cli, inventory_dir):
+    # Nothing listens on ai-deploy's own port 1, and loopback never drops.
+    proc = cli("--name", NAME, "--ip", "127.0.0.1", "--port", "1")
     assert proc.returncode != 0
     assert check_tag(proc.output) == "reachability"
     assert "refused" in proc.output.lower()
+    assert snapshot(inventory_dir) == {}
+
+
+def test_ac1_firewalled_port_fails_reachability(cli, target_ip, inventory_dir):
+    # The target's Windows firewall silently drops port 1 - the "SSH blocked" case.
+    proc = cli("--name", NAME, "--ip", target_ip, "--port", "1")
+    assert proc.returncode != 0
+    assert check_tag(proc.output) == "reachability"
+    assert "did not answer" in proc.output
     assert snapshot(inventory_dir) == {}
 
 
