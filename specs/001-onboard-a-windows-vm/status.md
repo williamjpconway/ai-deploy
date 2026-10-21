@@ -2,7 +2,7 @@
 
 **Stage:** Test
 **Last reconciled:** 2026-10-21
-**Next:** Test run 3 in progress - waiting on agent
+**Next:** waiting on G4 - review 001 (operator)
 
 <!-- Stage: Plan | Develop | Test | Accept. Gates, reconciliation and
      bookkeeping rules: see LIFECYCLE.md. Progress lives here only. -->
@@ -24,3 +24,4 @@
 - 2026-10-21 - Develop started at ccec810
 - 2026-10-21 - T1-T4, T6-T8 done: 23 tests pass (unit + live vs dc 192.168.3.1), ruff clean; masterchief added to BUILTIN\Administrators on dc by operator; auth/identity errors now name the exact fix - T5 open: AC3 destructive run approved but blocked by auto mode
 - 2026-10-21 - T5 done (AC3 passed on dc, operator-run); Test run 1 not clean (3 blocking) -> T9-T11 fixed; Test run 2 clean, 27 tests pass, ruff clean, 10 advisory findings open - waiting on G4
+- 2026-10-21 - G4 rejected -> Develop to fix clearer-errors advisories; T12-T15 done; Test run 3 clean, 40 tests pass, ruff clean, 11 advisory findings open - waiting on G4

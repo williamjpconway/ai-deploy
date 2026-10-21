@@ -100,6 +100,55 @@ Reviewer inputs: `spec.md`, the diff above, the static check output - nothing el
 ### Outcome
 Clean - waiting on G4
 
+## Test run 3 - 2026-10-21
+**Diff reviewed:** ccec810..ccc597a (after G4 reject -> Develop, fix tasks T12-T15)
+
+### Tests
+Command (on `ai-deploy`): `AI_DEPLOY_TEST_TARGET=192.168.3.1 python3 -m pytest` - 40 passed, 1 skipped (destructive AC3; last operator-run pass was before T15 changed the ssh argv - the same ssh path is exercised live by AC2/AC5/AC10/AC11, which pass)
+
+| AC | Test | Result |
+|----|------|--------|
+| AC1 | as run 2 | Pass |
+| AC2 | as run 2, plus missing / unreadable / 0644 Key B -> `[key]` before any network call (T12) | Pass |
+| AC3 | as run 2 | Pass (unit); destructive not re-run |
+| AC4 | as run 2 | Pass |
+| AC5 | as run 2, plus live onboard with a known_hosts path containing spaces (T15) | Pass |
+| AC6 | as run 2 | Pass |
+| AC7 | as run 2, plus missing binary -> `[prereq]` (T13) | Pass |
+| AC8 | as run 2 | Pass |
+| AC9 | as run 2, plus malformed / non-mapping inventory YAML -> `[inventory]`, unchanged (T13) | Pass |
+| AC10 | as run 2, plus `'[ip]:port'` hint off port 22 (T14) | Pass |
+| AC11 | as run 2 | Pass |
+| AC12 | as run 2, plus `--port` outside 1-65535 -> `[usage]` (T14) | Pass |
+
+All 13 new tests were confirmed failing before T12-T15 were implemented.
+
+### Static checks
+| Check | Command | Result |
+|-------|---------|--------|
+| ruff lint | `ruff check .` | All checks passed |
+| ruff format | `ruff format --check .` | 82 files already formatted |
+
+### Independent review
+Reviewer inputs: `spec.md`, the diff above, the static check output - nothing else. Run 2 advisory #1, #3 (traceback part), #6, #7: fixed in run 3.
+
+| # | Severity | Finding | Location | Status |
+|---|----------|---------|----------|--------|
+| 1 | advisory | Reserved names (`windows`, `all`, `ungrouped`, `localhost`) accepted; `--name windows` re-run pings the whole group | `onboard/cli.py` | open |
+| 2 | advisory | Conflict check misses nested `children:` / INI inventory entries (R4 partly met for hand-edited inventory) | `onboard/inventory.py` | open |
+| 3 | advisory | IPs compared as raw strings (IPv6 spellings) | `onboard/inventory.py` | open |
+| 4 | advisory | "already onboarded" doesn't verify the entry's vars match R5 | `onboard/inventory.py`, `cli.py` | open |
+| 5 | advisory | `--known-hosts` whose parent dir doesn't exist: key silently not recorded, then misreported as `[ansible]` | `onboard/checks.py` | open |
+| 6 | advisory | Fix-it hints (`ssh-keygen -R ... -f`, `chmod 600`) don't shell-quote paths - wrong to paste for a path with spaces (gap left by T15) | `onboard/checks.py` | open |
+| 7 | advisory | `UserKnownHostsFile="..."` doesn't escape `"`, `%`, `~` in the (hidden, operator-set) path | `onboard/checks.py` | open |
+| 8 | advisory | Remaining tracebacks: PermissionError on lock/staging, `--inventory-dir` that is a file, EXDEV on cross-filesystem link, missing PyYAML (inventory never left changed) | `onboard/inventory.py`, `cli.py` | open |
+| 9 | advisory | Passphrase-protected/corrupt Key B shows as `[authentication]`; `ssh-keygen -y -P ''` would catch it locally | `onboard/checks.py` | open |
+| 10 | advisory | Admin SID not checked for enabled state; account matched on name only (local or other-domain `masterchief` passes) | `onboard/checks.py` | open |
+| 11 | advisory | AC8 has no test for an existing entry failing the `[ansible]` check | `tests/live/test_live.py` | open |
+
+### Outcome
+Clean - waiting on G4
+
 ## Decision
 <!-- Accepted YYYY-MM-DD (masterchief)
      or Rejected YYYY-MM-DD (masterchief) -> Develop|Plan: <reason> -->
