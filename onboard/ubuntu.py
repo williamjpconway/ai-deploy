@@ -3,7 +3,16 @@ password authentication really off."""
 
 import re
 
-from onboard.checks import SSH_TIMEOUT, USER, CheckFailed, known_host_name, ssh, ssh_argv
+from onboard.checks import (
+    SSH_TIMEOUT,
+    USER,
+    CheckFailed,
+    handshake_refused,
+    known_host_name,
+    refused_during_handshake,
+    ssh,
+    ssh_argv,
+)
 
 PREP_SCRIPT = "utils/onboarding/ubuntu2604/initialize-ssh-onboarding.sh"
 IDENTITY_PROBE = (
@@ -51,6 +60,8 @@ def password_auth(runner, ip, port, key, known_hosts):
             f"{ip}'s SSH host key changed between checks - clear it with: "
             f"ssh-keygen -R {known_host_name(ip, port)} -f {known_hosts}",
         )
+    if refused_during_handshake(err):
+        raise handshake_refused(ip)
     match = METHODS_REPLY.search(err)
     if result.timed_out or result.returncode != 255 or not match:
         raise CheckFailed(

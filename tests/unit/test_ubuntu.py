@@ -216,3 +216,49 @@ def test_ac8_existing_entry_failing_a_check_is_unchanged(tmp_path, capsys):
     assert rc != 0
     assert check_tag(output) == "identity"
     assert snapshot(inventory) == before
+
+
+# T9 - sshd's PerSourcePenalties block, named for what it is
+
+
+RESET = (
+    255,
+    "",
+    "kex_exchange_identification: read: Connection reset by peer\r\n"
+    "Connection reset by 192.168.0.84 port 22\r\n",
+)
+
+
+def test_handshake_reset_is_named_as_a_penalty_block(tmp_path, capsys):
+    rc, output = run(tmp_path, UbuntuStubRunner(identity=RESET), capsys)
+    assert rc != 0
+    assert check_tag(output) == "ssh"
+    assert "PerSourcePenalties" in output
+
+
+def test_handshake_reset_on_the_methods_probe_is_not_a_password_auth_failure(tmp_path, capsys):
+    rc, output = run(tmp_path, UbuntuStubRunner(methods=RESET), capsys)
+    assert check_tag(output) == "ssh"
+    assert "PerSourcePenalties" in output
+
+
+def test_handshake_reset_is_named_for_windows_too(tmp_path, capsys):
+    from helpers import StubRunner
+
+    rc = main(
+        [
+            "--name",
+            "win-test",
+            "--ip",
+            "192.168.3.1",
+            "--inventory-dir",
+            str(tmp_path / "inventory"),
+            "--known-hosts",
+            str(tmp_path / "kh"),
+        ],
+        runner=StubRunner(shell_probe=RESET),
+    )
+    out = capsys.readouterr()
+    assert rc != 0
+    assert check_tag(out.out + out.err) == "ssh"
+    assert "PerSourcePenalties" in out.out + out.err

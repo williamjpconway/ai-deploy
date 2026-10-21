@@ -12,3 +12,5 @@
 - [ ] **T6** `ansible.builtin.ping` through staged / real inventory, rollback, existing-entry path (covers AC5, AC7, AC4, AC8)
 - [ ] **T7** `testlab/proxmox.py` snapshot helper and the lab-destructive AC6 run on a slot (covers AC6)
 - [ ] **T8** `AGENTS.md` (run/test commands), Ubuntu prep README; full suite (001 + 007) + `ruff check` + `ruff format --check` clean on `ai-deploy` (covers AC1-AC12)
+- [ ] **T9** (fix, Develop finding) A connection reset during the SSH handshake is reported as `[ssh]` naming the target's PerSourcePenalties block and the fix, for both profiles; unit tests (covers AC1, AC2 messaging; R7)
+- [ ] **T10** (fix, Develop finding) `initialize-ssh-onboarding.sh` adds `PerSourcePenaltyExemptList` for ai-deploy (192.168.3.2) to the keys-only sshd config, idempotently, with `--dry-run`; applied to slot 9201, then template 9001 re-sealed via a slot and copied back by the operator; full Ubuntu live suite passes in one run (covers AC10, AC2, AC8 together)

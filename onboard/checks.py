@@ -99,6 +99,24 @@ def ssh_argv(ip, port, key, known_hosts, command, extra_options=()):
     ]
 
 
+def refused_during_handshake(err):
+    """sshd dropped the connection before authentication even started."""
+    return "kex_exchange_identification" in err or (
+        "Connection reset by" in err and "Permission denied" not in err
+    )
+
+
+def handshake_refused(ip):
+    return CheckFailed(
+        "ssh",
+        f"{ip} accepted the TCP connection but reset it during the SSH handshake - it is "
+        "refusing this host for now. OpenSSH (9.8+) blocks a client for a while after "
+        "repeated failed or abandoned logins (PerSourcePenalties). Wait a minute and retry, "
+        "or exempt ai-deploy on the target with PerSourcePenaltyExemptList "
+        "(initialize-ssh-onboarding.sh does this for Ubuntu).",
+    )
+
+
 def ssh(runner, ip, port, key, known_hosts, command, auth_message):
     """Run one command over SSH, turning host-key and auth refusals into R9/R2 failures.
 
@@ -124,6 +142,8 @@ def ssh(runner, ip, port, key, known_hosts, command, auth_message):
             )
         if "Permission denied" in err:
             raise CheckFailed("authentication", auth_message(ip, key))
+        if refused_during_handshake(err):
+            raise handshake_refused(ip)
         raise CheckFailed("ssh", f"SSH to {ip} failed: {err.strip() or 'no error output'}")
     return result
 
